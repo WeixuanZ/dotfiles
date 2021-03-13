@@ -71,7 +71,6 @@ ZSH_THEME="agnoster"
 
 ################################################################
 
-# zsh-apple-touchbar
 
 plugins=(vi-mode z zsh-autosuggestions zsh-syntax-highlighting sublime osx git colored-man-pages autoswitch_virtualenv docker docker-compose)
 
@@ -94,12 +93,10 @@ source $ZSH/oh-my-zsh.sh
 # User configuration
 
 export TERM=xterm-256color-italic
-export BAT_THEME="Solarized (dark)"
+export BAT_THEME="Monokai Extended"
+
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=236'
 # ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion)
-
-# ccat output colour style
-ZSH_COLORIZE_STYLE="solarized-dark"
 
 # for the autoswitch_virtualenv plugin, specifies where the virtualenvs are created by default
 AUTOSWITCH_VIRTUAL_ENV_DIR="$HOME/.virtualenvs"
@@ -146,12 +143,21 @@ function latexinit {
     subl -n -a . ${1:-report}.tex
 }
 
+function lscolor {
+    for i in {0..255} ; do
+        printf "\x1b[48;5;%sm%3d\e[0m " "$i" "$i"
+        if (( i == 15 )) || (( i > 15 )) && (( (i-15) % 6 == 0 )); then
+            printf "\n";
+        fi
+    done
+}
+
 # etc
 
 # for subl to work
 export PATH="/usr/local/sbin:$PATH"
-# set sublime text as the degault editor
-export EDITOR='subl -w'
+
+export EDITOR=vim
 
 # iTerm2 shell integration
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
