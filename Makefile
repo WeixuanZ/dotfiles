@@ -13,7 +13,7 @@ brew:
 quicklook_lib_dir = $(HOME)/Library/QuickLook
 brew-packages: brew
 	brew bundle --file $(DOTFILES_DIR)/install/Brewfile
-	[ -d "$(quicklook_lib_dir)" ] && xattr -d -r com.apple.quarantine $(quicklook_lib_dir) || echo "QuickLook folder not found"
+	[ -d "$(quicklook_lib_dir)" ] && xattr -d -r com.apple.quarantine $(quicklook_lib_dir)
 
 python-packages: brew
 	is-brew-package python || brew install python
@@ -42,6 +42,16 @@ vim_ycm_dir = $(HOME)/.vim/plugged/youcompleteme
 vim-ycm: vim brew-packages
 	(cd $(vim_ycm_dir) && git submodule update --init --recursive)
 	python3 $(vim_ycm_dir)/install.py --all
+
+iterm2: brew
+	is-installed iTerm || brew install iterm2
+	curl -fLso font.zip https://download.jetbrains.com/fonts/JetBrainsMono-2.225.zip
+	unzip -o font.zip -d tmp/
+	mv tmp/fonts/ttf/* $(HOME)/Library/Fonts
+	rm -rf font.zip tmp
+	defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "$(DOTFILES_DIR)/iterm2/"
+	defaults write com.googlecode.iterm2.plist LoadPrefsFromCustomFolder -bool true
+	open -a "iTerm"
 
 haskell:
 	is-executable ghc || curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
