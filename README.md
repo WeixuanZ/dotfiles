@@ -1,5 +1,25 @@
 # .files
 
-My dotfiles for MacOS.
+My dotfiles for macOS.
 
-Makefile approach inspired by [webpro/dotfiles](https://github.com/webpro/dotfiles).
+To symlink all dotfiles tracked by git in this repository into your `$HOME`,
+simply use
+
+```sh
+make
+```
+
+Original config files, if existed, will have `.orig` appended to their names.
+
+For all available Make targets, see
+
+```sh
+make help
+```
+
+Both iTerm2 and vim use the [monkai-tasty
+theme](https://github.com/patstockwell/vim-monokai-tasty) 🎉.
+
+Approach inspired by [webpro/dotfiles](https://github.com/webpro/dotfiles) and
+[jessfraz/dotfiles](https://github.com/jessfraz/dotfiles). Other credits are
+listed in each file 🖖.
