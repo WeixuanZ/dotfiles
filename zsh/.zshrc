@@ -139,8 +139,7 @@ function latexinit {
     cp ~/Code/wex/wex.cls .
     cp ~/Code/wex/.gitignore .
     echo "\\\\documentclass[]{wex}\n\\\\title{DefaultTitle}\n\n\n\\\\begin{document}\n\\\\wextitle\n\n\n\\\\end{document}" >> ${1:-report}.tex
-    echo "*.tex" >> .tabnineignore
-    subl -n -a . ${1:-report}.tex
+    vim ${1:-report}.tex +VimtexCompile
 }
 
 function lscolor {

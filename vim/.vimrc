@@ -5,6 +5,7 @@ call plug#begin('~/.vim/plugged')
 " ====================================================================
 Plug 'ervandew/supertab'
     let g:SuperTabClosePreviewOnPopupClose = 1
+    let g:SuperTabDefaultCompletionType = '<C-n>'
 Plug 'valloric/youcompleteme'
     let g:ycm_autoclose_preview_window_after_completion = 1
     let g:ycm_complete_in_strings = 1
@@ -13,11 +14,9 @@ Plug 'sirver/ultisnips'
     " make YCM compatible with UltiSnips (using supertab)
     let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
     let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
-    let g:SuperTabDefaultCompletionType = '<C-n>'
-
     " better key bindings for UltiSnipsExpandTrigger
     let g:UltiSnipsExpandTrigger = '<tab>'
-    let g:UltiSnipsJumpForwardTrigger = '<tab>'
+    let g:UltiSnipsJumpForwardTrigger = '<Space><tab>'
     let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
 Plug 'honza/vim-snippets'
 " }}}
@@ -27,20 +26,22 @@ Plug 'honza/vim-snippets'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
     nnoremap <silent> <C-p> :Files<CR>
-    nnoremap <silent> <leader>f :Rg<CR>
+    nnoremap <silent> <leader>f :BLines<CR>
     nnoremap <silent> <leader>b :Buffer<CR>
     nnoremap <silent> <leader>A :Windows<CR>
-    nnoremap <silent> <leader>; :BLines<CR>
-    nnoremap <leader>H :History<CR>
-    let $FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --layout reverse --preview 'bat --color=always --style=header,grid --line-range :300 {}'"
+    nnoremap <silent> <leader>H :History<CR>
+    let $FZF_DEFAULT_OPTS = '--reverse --preview-window right:60%'  " the defaults are pretty good
     let $FZF_DEFAULT_COMMAND = 'rg --files --ignore-case --hidden -g "!{.git,node_modules,vendor}/*"'
     let g:fzf_action = {
     \ 'ctrl-q': 'wall | bdelete!',
     \ 'ctrl-t': 'tab split',
     \ 'ctrl-x': 'split',
     \ 'ctrl-v': 'vsplit' }
+    let g:fzf_colors = {
+    \ 'fg': ['fg', 'Comment'],
+    \ 'hl+': ['fg', 'Function'] }
 Plug 'preservim/nerdtree'
-    let g:NERDTreeShowHidden=1
+    let g:NERDTreeShowHidden = 1
     let g:NERDTreeAutoDeleteBuffer = 1
     let g:NERDTreeCascadeOpenSingleChildDir = 1
     nnoremap <leader>n :call NERDTreeToggleAndFind()<CR>
@@ -59,7 +60,10 @@ Plug 'preservim/nerdtree'
 "=====================================================================
 Plug 'Lokaltog/vim-easymotion'
     let g:EasyMotion_smartcase = 1
-    map <Space><Space> <Plug>(easymotion-prefix)
+    let g:EasyMotion_use_upper = 1 " using capital letters for targets
+    let g:EasyMotion_keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ;'
+    map <Space>e <Plug>(easymotion-prefix)
+    nmap <Space><Space> <Plug>(easymotion-bd-w)
     map  / <Plug>(easymotion-sn)
     omap / <Plug>(easymotion-tn)
     map  n <Plug>(easymotion-next)
@@ -81,8 +85,11 @@ Plug 'scrooloose/nerdcommenter'
     let g:NERDSpaceDelims = 1
     nnoremap <silent> <leader>c} V}:call NERDComment('x', 'toggle')<CR>
     nnoremap <silent> <leader>c{ V{:call NERDComment('x', 'toggle')<CR>
-
+Plug 'junegunn/vim-easy-align'
+    xmap ga <Plug>(EasyAlign)
+    nmap ga <Plug>(EasyAlign)
 Plug 'mbbill/undotree'
+    let g:undotree_SetFocusWhenToggle = 1
     nnoremap <leader>u :UndotreeToggle<CR>
 Plug 'tpope/vim-unimpaired'
     " [<Space> and ]<Space>
@@ -105,56 +112,78 @@ Plug 'airblade/vim-gitgutter'
     let g:gitgutter_sign_added = '▌'
     let g:gitgutter_sign_modified = '▌'
     let g:gitgutter_sign_removed = '▌'
-    let g:gitgutter_sign_modified_removed = '•'
+    let g:gitgutter_sign_modified_reroved = '▌'
     let g:gitgutter_diff_args = '--ignore-space-at-eol'
+    set foldtext=gitgutter#fold#foldtext()
+    omap ih <Plug>(GitGutterTextObjectInnerPending)
+    omap ah <Plug>(GitGutterTextObjectOuterPending)
+    xmap ih <Plug>(GitGutterTextObjectInnerVisual)
+    xmap ah <Plug>(GitGutterTextObjectOuterVisual)
 " }}}
 
 " Languages {{{
 " ====================================================================
 Plug 'dense-analysis/ale'
-    let g:ale_set_balloons=1
-    let g:ale_fix_on_save=0
-    let g:ale_linters = {
-    \   'python': ['pylint'],
-    \   'javascript': ['eslint'],
-    \   'sh': ['shellcheck'],
-    \   'vim': ['vint']
-    \}
+    let g:ale_set_balloons = 1
+    let g:ale_fixror_save = 0
     let g:ale_fixers = {
     \   'python': ['autopep8'],
-    \   'javascript': ['eslint'],
+    \   'javascript': ['prettier'],
+    \   'html': ['prettier'],
     \   'css': ['stylelint'],
+    \   'tex': ['latexindent']
     \}
+    let g:ale_echo_msg_error_str = 'E'
+    let g:ale_echo_msg_warning_str = 'W'
+    let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+    let g:ale_languagetool_options = '--disable EN_QUOTES'
     let g:ale_sign_column_always = 1
-    let g:ale_sign_error = '◉'
-    let g:ale_sign_warning = '◉'
-    " let g:ale_set_highlights=0
-    highlight clear ALEErrorSign
-    highlight clear ALEWarningSign
+    let g:ale_sign_error = '•'
+    let g:ale_sign_warning = '•'
     augroup ale_sign_highlight
         autocmd!
-        autocmd VimEnter,Colorscheme * :highlight! ALEErrorSign ctermfg=1 ctermbg=NONE
-        autocmd VimEnter,Colorscheme * :highlight! ALEWarningSign ctermfg=3 ctermbg=NONE
-        autocmd VimEnter,Colorscheme * :highlight! ALEError cterm=undercurl
-        autocmd VimEnter,Colorscheme * :highlight! ALEWarning cterm=undercurl
+        autocmd Colorscheme * :highlight ALEErrorSign ctermfg=1 ctermbg=NONE
+        autocmd Colorscheme * :highlight ALEWarningSign ctermfg=3 ctermbg=NONE
+        autocmd Colorscheme * :highlight ALEError cterm=undercurl
+        autocmd Colorscheme * :highlight ALEWarning cterm=undercurl
     augroup END
     nmap <silent> <C-k> <Plug>(ale_previous_wrap)
     nmap <silent> <C-j> <Plug>(ale_next_wrap)
 Plug 'sheerun/vim-polyglot'
+    " Markdown
+    let g:vim_markdown_conceal_code_blocks = 0
+    let g:vim_markdown_toc_autofit = 1
+    let g:vim_markdown_math = 1
+    let g:vim_markdown_frontmatter = 1
+    let g:vim_markdown_edit_url_in = 'current'
 Plug 'lervag/vimtex'
-    let g:tex_flavor='latex'
-    let g:vimtex_view_method='skim'
-    let g:vimtex_quickfix_mode=0
-    let g:tex_conceal='abdmg'
+    let g:tex_flavor = 'latex'
+    let g:vimtex_syntax_nospell_comments = 1
+    let g:vimtex_view_method = 'skim'
+    " let g:vimtex_quickfix_mode = 1
+    let g:vimtex_quickfix_autoclose_after_keystrokes = 5
+    let g:vimtex_indent_lists = []
     augroup latex
         autocmd!
-        autocmd FileType tex nnoremap <buffer><leader>B :VimtexCompile<CR>
-        autocmd FileType tex map <silent> <buffer><leader>` :call vimtex#latexmk#errors_open(0)<CR>
+        autocmd FileType tex call TexConfig()
+        function TexConfig()
+            setlocal spell spelllang=en_gb
+            nnoremap <buffer><leader>L :VimtexCompile<CR>
+            nnoremap <buffer><leader>v :VimtexView<CR>
+            nnoremap <silent> <buffer><leader>` :call vimtex#latexmk#errors_open(0)<CR>
+            " The second argument extends the default vimtex#fzf#run options
+            nnoremap <buffer><leader>lt :call vimtex#fzf#run('ctli', { 'left': '20%' })<CR>
+        endfunction
     augroup END
-" Plug 'KeitaNakamura/tex-conceal.vim'
-    " set conceallevel=1
-    " hi Conceal ctermbg=none
+    if !exists('g:ycm_semantic_triggers')
+        let g:ycm_semantic_triggers = {}
+    endif
+    autocmd VimEnter * let g:ycm_semantic_triggers.tex=g:vimtex#re#youcompleteme
+    if has('nvim') " nvim for easy backward synchronisation
+        let g:vimtex_compiler_progname = 'nvr'
+    endif
 Plug 'ap/vim-css-color'
+Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install'  }
 " }}}
 
 " Appearance {{{
@@ -165,8 +194,11 @@ Plug 'vim-airline/vim-airline'
     let g:airline_powerline_fonts = 1
 Plug 'vim-airline/vim-airline-themes'
     let g:airline_theme='monokai_tasty'
-Plug 'Yggdroot/indentLine'
+Plug 'Yggdroot/indentLine', { 'for': ['python'] }
     let g:indentLine_char = '▏'
+    let g:indentLine_setConceal = 0
+    " let g:indentLine_setConceal = 0 " prevent indentLine from messing stuff up
+    " let g:indentLine_setColors = 0
 " }}}
 
 " Initialize plugin system
@@ -178,11 +210,13 @@ call plug#end()
 " ===================================================================
 set nocompatible
 set encoding=utf-8
+set conceallevel=2
 " set clipboard=unnamed,unnamedplus
 set modeline
 set hidden                            " Navigate away without saving
 set autoread                          " Auto reload changed files
 set wildmenu                          " Tab autocomplete in command mode
+set wildmode=longest:full,full
 set backspace=indent,eol,start        " http://vi.stackexchange.com/a/2163
 set laststatus=2                      " Show status line on startup
 set splitright                        " Open new splits to the right
@@ -208,34 +242,43 @@ set foldmethod=marker
 set foldlevel=2
 set noshowmode                        " don't show editing mode
 
+" Formatting
+set expandtab tabstop=4 softtabstop=4 " Four spaces for tabs everywhere
+set shiftwidth=4
+set textwidth=119
+set colorcolumn=80,120
+
 " Persistent undo
 set undodir=~/.vim/undo/
 set undofile
 set undolevels=1000
 set undoreload=10000
 
-" Ignored files/directories from autocomplete (and CtrlP)
+" Ignored files/directories from autocomplete
 set wildignore+=*/tmp/*
 set wildignore+=*.so
 set wildignore+=*.zip
 set wildignore+=*/vendor/bundle/*
 set wildignore+=*/node_modules/
 
-" Colours
+" Appearance
 silent! colorscheme vim-monokai-tasty
 set background=dark
-hi CursorLine ctermbg=0
-hi CursorLineNr term=bold ctermfg=228 guifg=#ffff87
-command! What echo synIDattr(synID(line('.'), col('.'), 1), 'name')
-
-" Formatting
-set expandtab tabstop=4 softtabstop=4 " Four spaces for tabs everywhere
-set shiftwidth=4
-set textwidth=79
-set colorcolumn=80,120
-highlight ColorColumn ctermbg=236
+set cursorline
 set number
-autocmd InsertEnter,InsertLeave * set cul!
+
+highlight CursorLine ctermbg=0
+highlight CursorLineNr cterm=bold ctermfg=green
+autocmd InsertEnter * hi CursorLineNr ctermfg=yellow
+autocmd InsertLeave * hi CursorLineNr ctermfg=green
+highlight MatchParen ctermfg=green
+highlight SpecialKey ctermbg=0
+highlight Conceal ctermfg=yellow
+highlight ColorColumn ctermbg=236
+highlight SpellBad cterm=undercurl ctermbg=NONE ctermfg=NONE
+highlight SpellCap cterm=undercurl ctermbg=NONE ctermfg=NONE
+highlight SpellLocal cterm=underline ctermbg=NONE ctermfg=NONE
+highlight SpellRare ctermbg=NONE ctermfg=NONE
 
 function! SetRelativenumber() " {{{
     " Help files don't get numbering so without this check we'll get an
@@ -247,6 +290,8 @@ endfunction " }}}
 autocmd BufEnter,FocusGained * call SetRelativenumber()
 autocmd BufLeave,FocusLost   * set norelativenumber
 autocmd BufWritePre * %s/\s\+$//e
+
+command! What echo synIDattr(synID(line('.'), col('.'), 1), 'name')
 
 let &t_SI = "\<Esc>]50;CursorShape=1\x7"
 let &t_SR = "\<Esc>]50;CursorShape=2\x7"
@@ -410,6 +455,7 @@ tnoremap <C-\><C-\> <C-\><C-n>:bd!<CR>
 augroup Reload_Vimrc
     autocmd! BufWritePost $MYVIMRC source % | echom "Reloaded " . $MYVIMRC | redraw
 augroup END
+
 " }}}
 
 
