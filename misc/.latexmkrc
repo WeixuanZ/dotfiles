@@ -8,6 +8,9 @@ $pvc_timeout_mins=15;
 # Time between checks for -pvc (in seconds)
 $sleep_time=5;
 
+# Additional files to clean, .= is perl concatenation assignment operator
+$clean_ext .= ' synctex.gz synctex.gz(busy) run.xml tex.bak bbl bcf fdb_latexmk run tdo %R-blx.bib';
+
 # Support for pythontex in v. 0.16 or higher, with latexmk 4.62 or higher
 #
 # What these definitions provide/do:
@@ -59,7 +62,7 @@ sub mypythontex {
 #  \usepackage{tikz,pgfplots}
 #  \usetikzlibrary{external}
 #  \tikzexternalize[mode=list and make]
-#  
+#
 #  \begin{document}
 #  \begin{tikzpicture}
 #    \begin{axis}

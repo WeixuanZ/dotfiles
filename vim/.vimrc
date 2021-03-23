@@ -40,6 +40,7 @@ Plug 'junegunn/fzf.vim'
     let g:fzf_colors = {
     \ 'fg': ['fg', 'Comment'],
     \ 'hl+': ['fg', 'Function'] }
+Plug 'airblade/vim-rooter'
 Plug 'preservim/nerdtree'
     let g:NERDTreeShowHidden = 1
     let g:NERDTreeAutoDeleteBuffer = 1
@@ -112,7 +113,8 @@ Plug 'airblade/vim-gitgutter'
     let g:gitgutter_sign_added = '▌'
     let g:gitgutter_sign_modified = '▌'
     let g:gitgutter_sign_removed = '▌'
-    let g:gitgutter_sign_modified_reroved = '▌'
+    let g:gitgutter_sign_removed_above_and_below = '▌'
+    let g:gitgutter_sign_modified_removed = '▌'
     let g:gitgutter_diff_args = '--ignore-space-at-eol'
     set foldtext=gitgutter#fold#foldtext()
     omap ih <Plug>(GitGutterTextObjectInnerPending)
@@ -163,22 +165,29 @@ Plug 'lervag/vimtex'
     " let g:vimtex_quickfix_mode = 1
     let g:vimtex_quickfix_autoclose_after_keystrokes = 5
     let g:vimtex_indent_lists = []
-    augroup latex
+    augroup tex
         autocmd!
-        autocmd FileType tex call TexConfig()
-        function TexConfig()
-            setlocal spell spelllang=en_gb
-            nnoremap <buffer><leader>L :VimtexCompile<CR>
-            nnoremap <buffer><leader>v :VimtexView<CR>
-            nnoremap <silent> <buffer><leader>` :call vimtex#latexmk#errors_open(0)<CR>
-            " The second argument extends the default vimtex#fzf#run options
-            nnoremap <buffer><leader>lt :call vimtex#fzf#run('ctli', { 'left': '20%' })<CR>
-        endfunction
+        autocmd FileType tex call TexConfig() " set spell and key maps
+        if !exists('g:ycm_semantic_triggers')
+            let g:ycm_semantic_triggers = {}
+        endif
+        autocmd VimEnter * let g:ycm_semantic_triggers.tex=g:vimtex#re#youcompleteme
+        autocmd BufWritePost *.tex let b:tex_wordcount = vimtex#misc#wordcount() " update word count on save
+        autocmd User VimtexEventInitPost silent! call vimtex#compiler#compile() " start compilation on enter
+        autocmd User VimtexEventQuit call TexQuit() " clean and quit Skim
     augroup END
-    if !exists('g:ycm_semantic_triggers')
-        let g:ycm_semantic_triggers = {}
-    endif
-    autocmd VimEnter * let g:ycm_semantic_triggers.tex=g:vimtex#re#youcompleteme
+    function TexConfig() " {{{
+        setlocal spell spelllang=en_gb
+        nnoremap <buffer><leader>L :VimtexCompile<CR>
+        nnoremap <buffer><leader>v :VimtexView<CR>
+        nnoremap <silent> <buffer><leader>` :call vimtex#latexmk#errors_open(0)<CR>
+        " The second argument extends the default vimtex#fzf#run options
+        nnoremap <buffer><leader>lt :call vimtex#fzf#run('ctli', { 'left': '20%' })<CR>
+    endfunction " }}}
+    function TexQuit() " {{{
+        call vimtex#compiler#clean(0)
+        call system('osascript -e ''tell application "Skim" to close first window''')
+    endfunction " }}}
     if has('nvim') " nvim for easy backward synchronisation
         let g:vimtex_compiler_progname = 'nvr'
     endif
@@ -191,6 +200,7 @@ Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install'  }
 Plug 'patstockwell/vim-monokai-tasty'
     let g:vim_monokai_tasty_italic = 1
 Plug 'vim-airline/vim-airline'
+    let g:airline#extensions#wordcount#formatter = 'custom' " fix tex word count
     let g:airline_powerline_fonts = 1
 Plug 'vim-airline/vim-airline-themes'
     let g:airline_theme='monokai_tasty'
@@ -318,6 +328,7 @@ inoremap <C-l> <Right>
 nnoremap Y y$
 nnoremap E $
 nnoremap B ^
+nnoremap S :%s//g<Left><Left>
 nnoremap <leader>z za
 
 " Select all text
