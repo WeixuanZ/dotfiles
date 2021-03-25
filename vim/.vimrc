@@ -26,20 +26,42 @@ Plug 'honza/vim-snippets'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
     nnoremap <silent> <C-p> :Files<CR>
+    nnoremap <silent> <leader>r :RG<CR>
     nnoremap <silent> <leader>f :BLines<CR>
     nnoremap <silent> <leader>b :Buffer<CR>
     nnoremap <silent> <leader>A :Windows<CR>
     nnoremap <silent> <leader>H :History<CR>
-    let $FZF_DEFAULT_OPTS = '--reverse --preview-window right:60%'  " the defaults are pretty good
-    let $FZF_DEFAULT_COMMAND = 'rg --files --ignore-case --hidden -g "!{.git,node_modules,vendor}/*"'
     let g:fzf_action = {
-    \ 'ctrl-q': 'wall | bdelete!',
-    \ 'ctrl-t': 'tab split',
-    \ 'ctrl-x': 'split',
-    \ 'ctrl-v': 'vsplit' }
+                \ 'ctrl-q': 'wall | bdelete!',
+                \ 'ctrl-t': 'tab split',
+                \ 'ctrl-x': 'split',
+                \ 'ctrl-v': 'vsplit' }
     let g:fzf_colors = {
-    \ 'fg': ['fg', 'Comment'],
-    \ 'hl+': ['fg', 'Function'] }
+                \ 'fg': ['fg', 'Comment'],
+                \ 'hl+': ['fg', 'Function'] }
+
+    let $FZF_DEFAULT_OPTS = '--reverse --cycle --preview-window right:60%' " the defaults are pretty good
+    function SetFZFCommand() " ignore the current file
+        let $FZF_DEFAULT_COMMAND = printf('rg --files --hidden -g ''!{.git,node_modules,vendor}/*'' -g ''!%s''', shellescape(expand('%'))) " :Files calls this as source
+    endfunction
+    autocmd BufEnter * :call SetFZFCommand()
+    " {{{ alternatively can use this, but lose some features
+    " command! -bang -nargs=* Files
+    " \ call fzf#run(fzf#wrap({'source': 'rg --files --hidden -g ''!{.git,node_modules,vendor}/*'' -g ''!'.shellescape(expand('%'))."'"})) " }}}
+
+    " completely delegate search responsiblity to ripgrep process, instead of letting fzf filter source provided by rg
+    " this allows for continuous searching in preview window
+    command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
+    function! RipgrepFzf(query, fullscreen) " {{{
+        " ignore the current file
+        let command_fmt = 'rg --color=always --smart-case --no-heading --column --line-number --hidden -g ''!{.git,node_modules,vendor}/*'' -g ''!%s'' -- %s || true'
+        let curr_file = shellescape(expand('%'))
+        let initial_command = printf(command_fmt, curr_file, shellescape(a:query))
+        let reload_command = printf(command_fmt, curr_file, '{q}')
+        let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+        call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
+    endfunction " }}}
+
 Plug 'airblade/vim-rooter'
 Plug 'preservim/nerdtree'
     let g:NERDTreeShowHidden = 1
@@ -47,7 +69,6 @@ Plug 'preservim/nerdtree'
     let g:NERDTreeCascadeOpenSingleChildDir = 1
     nnoremap <leader>n :call NERDTreeToggleAndFind()<CR>
     nnoremap <C-n> :NERDTreeFocus<CR>
-
     function! NERDTreeToggleAndFind() " {{{
         if (exists('t:NERDTreeBufName') && bufwinnr(t:NERDTreeBufName) != -1)
             execute ':NERDTreeClose'
@@ -92,8 +113,6 @@ Plug 'junegunn/vim-easy-align'
 Plug 'mbbill/undotree'
     let g:undotree_SetFocusWhenToggle = 1
     nnoremap <leader>u :UndotreeToggle<CR>
-Plug 'tpope/vim-unimpaired'
-    " [<Space> and ]<Space>
 " }}}
 
 " Git {{{
@@ -160,8 +179,10 @@ Plug 'sheerun/vim-polyglot'
     let g:vim_markdown_edit_url_in = 'current'
 Plug 'lervag/vimtex'
     let g:tex_flavor = 'latex'
-    let g:vimtex_syntax_nospell_comments = 1
     let g:vimtex_view_method = 'skim'
+    let g:vimtex_syntax_nospell_comments = 1
+    let g:vimtex_format_enabled = 1
+    let g:vimtex_fold_enabled = 1
     " let g:vimtex_quickfix_mode = 1
     let g:vimtex_quickfix_autoclose_after_keystrokes = 5
     let g:vimtex_indent_lists = []
@@ -178,6 +199,7 @@ Plug 'lervag/vimtex'
     augroup END
     function TexConfig() " {{{
         setlocal spell spelllang=en_gb
+        setlocal formatoptions+=t
         nnoremap <buffer><leader>L :VimtexCompile<CR>
         nnoremap <buffer><leader>v :VimtexView<CR>
         nnoremap <silent> <buffer><leader>` :call vimtex#latexmk#errors_open(0)<CR>
@@ -193,6 +215,16 @@ Plug 'lervag/vimtex'
     endif
 Plug 'ap/vim-css-color'
 Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install'  }
+" }}}
+
+" Utilities {{{
+Plug 'tpope/vim-unimpaired'
+    " [<Space> and ]<Space>
+Plug 'tyru/open-browser.vim'
+    let g:netrw_nogx = 1 " disable netrw's gx mapping, which is currently not working on macOS
+    nmap gx <Plug>(openbrowser-smart-search)
+    vmap gx <Plug>(openbrowser-smart-search)
+    command! OpenBrowserCurrent execute "OpenBrowser" "file:///" . expand('%:p:gs?\\?/?')
 " }}}
 
 " Appearance {{{
@@ -244,19 +276,20 @@ set incsearch                         " Show search results as you type
 set nohlsearch                        " No highlight search results
 set timeoutlen=1000 ttimeoutlen=0     " Remove timeout when hitting escape
 set showcmd                           " Show size of visual selection
-set scrolloff=8                       " Leave 5 lines of buffer when scrolling
+set scrolloff=8                       " Leave 8 lines of buffer when scrolling
 set sidescrolloff=10                  " Leave 10 characters of horizontal buffer when scrolling
 set virtualedit=onemore               " Allow the cursor to move just past the end of the line
 set signcolumn=yes
 set foldmethod=marker
 set foldlevel=2
-set noshowmode                        " don't show editing mode
+set noshowmode                        " Don't show editing mode
 
 " Formatting
 set expandtab tabstop=4 softtabstop=4 " Four spaces for tabs everywhere
 set shiftwidth=4
-set textwidth=119
+set textwidth=79
 set colorcolumn=80,120
+set formatoptions=crqnl1j
 
 " Persistent undo
 set undodir=~/.vim/undo/
@@ -299,7 +332,6 @@ function! SetRelativenumber() " {{{
 endfunction " }}}
 autocmd BufEnter,FocusGained * call SetRelativenumber()
 autocmd BufLeave,FocusLost   * set norelativenumber
-autocmd BufWritePre * %s/\s\+$//e
 
 command! What echo synIDattr(synID(line('.'), col('.'), 1), 'name')
 
@@ -325,27 +357,30 @@ inoremap <C-j> <Down>
 inoremap <C-k> <Up>
 inoremap <C-l> <Right>
 
+nnoremap <C-c> :edit ~/.vimrc<CR>
+
 nnoremap Y y$
 nnoremap E $
 nnoremap B ^
-nnoremap S :%s//g<Left><Left>
+nnoremap <leader>w :w<CR>
+nnoremap <leader>a =ip
+nnoremap <leader>s :%s//g<Left><Left>
+nnoremap <leader>R :retab<CR>
 nnoremap <leader>z za
 
 " Select all text
 noremap vA ggVG
 
-nnoremap <leader>w :w<CR>
-nnoremap <leader>r :retab<CR>
-nnoremap <silent> <leader>x :bd<CR>
+" Clipboard
+nnoremap <leader>p "+p
+nnoremap <leader>]p "+]p
+nnoremap <leader>y "+y
+vnoremap <leader>y "+y
 
 " This unsets the "last search pattern" register by hitting return
 nnoremap <CR> :nohlsearch<CR><CR>
 
-" Remove trailing whitespaces in current buffer
-nnoremap <Leader><BS>s :1,$s/[ ]*$//<CR>:nohlsearch<CR>1G
-
 nnoremap <leader>% :call CopyCurrentFilePath()<CR>
-
 function! CopyCurrentFilePath() " {{{
     let @+ = expand('%')
     echo @+
@@ -354,6 +389,10 @@ endfunction " }}}
 " Move visual selection up and down
 vnoremap J :m '>+1<CR>gv=gv
 vnoremap K :m '<-2<CR>gv=gv
+
+" Apply macros with Q
+nnoremap Q @q
+vnoremap Q :norm @q<cr>
 
 " Tab {{{
 " ===================================================================
@@ -463,8 +502,26 @@ tnoremap <C-\><C-\> <C-\><C-n>:bd!<CR>
 
 " Autocommands {{{
 " ===================================================================
-augroup Reload_Vimrc
+augroup reload_vimrc
     autocmd! BufWritePost $MYVIMRC source % | echom "Reloaded " . $MYVIMRC | redraw
+augroup END
+
+augroup format
+    autocmd!
+    autocmd BufWritePre * %s/\s\+$//e
+augroup END
+
+augroup help_nav
+    autocmd!
+    autocmd FileType help call ConfigHelp()
+    function ConfigHelp()
+        nnoremap <buffer> <CR> <C-]>
+        nnoremap <buffer> <BS> <C-T>
+        nnoremap <buffer> o /'\l\{2,\}'<CR>
+        nnoremap <buffer> O ?'\l\{2,\}'<CR>
+        nnoremap <buffer> s /\|\zs\S\+\ze\|<CR>
+        nnoremap <buffer> S ?\|\zs\S\+\ze\|<CR>
+    endfunction
 augroup END
 
 " }}}
@@ -472,7 +529,8 @@ augroup END
 
 " Credits {{{
 " * [Alexander Tsygankov](https://github.com/zenbro/dotfiles/blob/master/.nvimrc)
-" * [Tim Clifford](https://github.com/tim-clifford/vimrc/blob/master/.vimrc)
+" * [Tim Clifford](https://github.com/tim-clifford/nvimrc/blob/master/init.vim)
 " * [Mike Coutermarsh](https://github.com/mscoutermarsh/dotfiles/blob/master/vim/vimrc.symlink)
+" * https://vim.fandom.com/wiki/
 " }}}
 
