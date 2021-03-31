@@ -9,7 +9,9 @@ Plug 'ervandew/supertab'
 Plug 'valloric/youcompleteme'
     let g:ycm_autoclose_preview_window_after_completion = 1
     let g:ycm_complete_in_strings = 1
-    nnoremap <leader>g :YcmCompleter GoToDefinitionElseDeclaration<CR>
+    let g:ycm_show_diagnostics_ui = 0 " use ALE for linting
+    nnoremap <leader>d :YcmCompleter GoTo<CR>
+    nnoremap <leader>gr :YcmCompleter GoToReferences<CR>
 Plug 'sirver/ultisnips'
     " make YCM compatible with UltiSnips (using supertab)
     let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
@@ -44,7 +46,10 @@ Plug 'junegunn/fzf.vim'
     function SetFZFCommand() " ignore the current file
         let $FZF_DEFAULT_COMMAND = printf('rg --files --hidden -g ''!{.git,node_modules,vendor}/*'' -g ''!%s''', shellescape(expand('%'))) " :Files calls this as source
     endfunction
-    autocmd BufEnter * :call SetFZFCommand()
+    augroup set_fzf_command
+        autocmd!
+        autocmd BufEnter * :call SetFZFCommand()
+    augroup END
     " {{{ alternatively can use this, but lose some features
     " command! -bang -nargs=* Files
     " \ call fzf#run(fzf#wrap({'source': 'rg --files --hidden -g ''!{.git,node_modules,vendor}/*'' -g ''!'.shellescape(expand('%'))."'"})) " }}}
@@ -145,8 +150,14 @@ Plug 'airblade/vim-gitgutter'
 " Languages {{{
 " ====================================================================
 Plug 'dense-analysis/ale'
-    let g:ale_set_balloons = 1
-    let g:ale_fixror_save = 0
+    let g:ale_hover_cursor = 0 " using ycm hover only
+    " let g:ale_hover_to_preview = 0 " balloons don't work
+    " this will be merged with the default config dict, note that only unspecified languages will have all linters enabled by default
+    let g:ale_linters = {
+    \   'python': ['flake8', 'mypy', 'pylint', 'pyright', 'pyls'],
+    \   'zsh': ['shell', 'shellcheck']
+    \} " add pyls to enabled linters to enable renaming
+    " let g:ale_fix_on_save = 0
     let g:ale_fixers = {
     \   'python': ['autopep8'],
     \   'javascript': ['prettier'],
@@ -215,9 +226,11 @@ Plug 'lervag/vimtex'
     endif
 Plug 'ap/vim-css-color'
 Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install'  }
+Plug 'goerz/jupytext.vim'
 " }}}
 
 " Utilities {{{
+" ====================================================================
 Plug 'tpope/vim-unimpaired'
     " [<Space> and ]<Space>
 Plug 'tyru/open-browser.vim'
@@ -254,6 +267,7 @@ set nocompatible
 set encoding=utf-8
 set conceallevel=2
 " set clipboard=unnamed,unnamedplus
+set mouse=a
 set modeline
 set hidden                            " Navigate away without saving
 set autoread                          " Auto reload changed files
@@ -310,10 +324,26 @@ set background=dark
 set cursorline
 set number
 
+function! SetRelativenumber() " {{{
+    " Help files don't get numbering so without this check we'll get an
+    " annoying shift in the text when going in and out of a help buffer
+    if &filetype != 'help'
+        set relativenumber
+    endif
+endfunction " }}}
+augroup set_relative_number
+    autocmd!
+    autocmd BufEnter,FocusGained * call SetRelativenumber()
+    autocmd BufLeave,FocusLost   * set norelativenumber
+augroup END
+
 highlight CursorLine ctermbg=0
 highlight CursorLineNr cterm=bold ctermfg=green
-autocmd InsertEnter * hi CursorLineNr ctermfg=yellow
-autocmd InsertLeave * hi CursorLineNr ctermfg=green
+augroup cursor_line_highlight
+    autocmd!
+    autocmd InsertEnter * hi CursorLineNr ctermfg=yellow
+    autocmd InsertLeave * hi CursorLineNr ctermfg=green
+augroup END
 highlight MatchParen ctermfg=green
 highlight SpecialKey ctermbg=0
 highlight Conceal ctermfg=yellow
@@ -323,23 +353,20 @@ highlight SpellCap cterm=undercurl ctermbg=NONE ctermfg=NONE
 highlight SpellLocal cterm=underline ctermbg=NONE ctermfg=NONE
 highlight SpellRare ctermbg=NONE ctermfg=NONE
 
-function! SetRelativenumber() " {{{
-    " Help files don't get numbering so without this check we'll get an
-    " annoying shift in the text when going in and out of a help buffer
-    if &filetype != 'help'
-        set relativenumber
-    endif
-endfunction " }}}
-autocmd BufEnter,FocusGained * call SetRelativenumber()
-autocmd BufLeave,FocusLost   * set norelativenumber
-
-command! What echo synIDattr(synID(line('.'), col('.'), 1), 'name')
-
-let &t_SI = "\<Esc>]50;CursorShape=1\x7"
-let &t_SR = "\<Esc>]50;CursorShape=2\x7"
-let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+" Cursor
+if exists('$TMUX') " tmux will only forward escape sequences to the terminal if surrounded by a DCS sequence
+    let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
+    let &t_SR = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
+    let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
+else
+    let &t_SI = "\<Esc>]50;CursorShape=1\x7"
+    let &t_SR = "\<Esc>]50;CursorShape=2\x7"
+    let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+endif
+" Undercurl
 let &t_ZH = "\e[3m"
 let &t_ZR = "\e[23m"
+" Italic
 highlight Comment cterm=italic
 let &t_Cs = "\e[4:3m"
 let &t_Ce = "\e[4:0m"
@@ -357,6 +384,13 @@ inoremap <C-j> <Down>
 inoremap <C-k> <Up>
 inoremap <C-l> <Right>
 
+onoremap in( :<c-u>normal! f(vi(<cr>
+onoremap il( :<c-u>normal! F)vi(<cr>
+onoremap an( :<c-u>normal! f(va(<cr>
+onoremap in{ :<c-u>normal! f{vi{<cr>
+onoremap il{ :<c-u>normal! F}vi{<cr>
+onoremap ia{ :<c-u>normal! f{va{<cr>
+
 nnoremap <C-c> :edit ~/.vimrc<CR>
 
 nnoremap Y y$
@@ -364,9 +398,10 @@ nnoremap E $
 nnoremap B ^
 nnoremap <leader>w :w<CR>
 nnoremap <leader>a =ip
-nnoremap <leader>s :%s//g<Left><Left>
 nnoremap <leader>R :retab<CR>
 nnoremap <leader>z za
+nnoremap <leader>s :%s//g<Left><Left>
+vnoremap <leader>s :s//g<Left><Left>
 
 " Select all text
 noremap vA ggVG
@@ -395,7 +430,7 @@ nnoremap Q @q
 vnoremap Q :norm @q<cr>
 
 " Tab {{{
-" ===================================================================
+" -------------------------------------------------------------------
 " Easy tab navigation
 nnoremap <C-Left> :tabprevious<CR>
 nnoremap <C-Right> :tabnext<CR>
@@ -412,7 +447,7 @@ nmap <leader>9 9gt
 " }}}
 
 " Buffer {{{
-" ===================================================================
+" -------------------------------------------------------------------
 " Creating splits with empty buffers in all directions
 nnoremap <Leader>hn :leftabove  vnew<CR>
 nnoremap <Leader>ln :rightbelow vnew<CR>
@@ -460,31 +495,44 @@ function! DeleteHiddenBuffers() " {{{
 endfunction " }}}
 " }}}
 
+" Qickfix {{{
+" -------------------------------------------------------------------
+nnoremap <silent> <leader>F :call ToggleQuickFix()<CR>
+function! ToggleQuickFix() " {{{
+    if empty(filter(getwininfo(), 'v:val.quickfix'))
+        copen
+    else
+        cclose
+    endif
+endfunction " }}}
+" }}}
+
 " Capitalization {{{
+" -------------------------------------------------------------------
 if (&tildeop)
-    nmap gcw guw~l
-    nmap gcW guW~l
-    nmap gciw guiw~l
-    nmap gciW guiW~l
-    nmap gcis guis~l
-    nmap gc$ gu$~l
-    nmap gcgc guu~l
-    nmap gcc guu~l
-    vmap gc gu~l
+    nnoremap gcw guw~l
+    nnoremap gcW guW~l
+    nnoremap gciw guiw~l
+    nnoremap gciW guiW~l
+    nnoremap gcis guis~l
+    nnoremap gc$ gu$~l
+    nnoremap gcgc guu~l
+    nnoremap gcc guu~l
+    vnoremap gc gu~l
 else
-    nmap gcw guw~h
-    nmap gcW guW~h
-    nmap gciw guiw~h
-    nmap gciW guiW~h
-    nmap gcis guis~h
-    nmap gc$ gu$~h
-    nmap gcgc guu~h
-    nmap gcc guu~h
-    vmap gc gu~h
+    nnoremap gcw guw~h
+    nnoremap gcW guW~h
+    nnoremap gciw guiw~h
+    nnoremap gciW guiW~h
+    nnoremap gcis guis~h
+    nnoremap gc$ gu$~h
+    nnoremap gcgc guu~h
+    nnoremap gcc guu~h
+    vnoremap gc gu~h
 endif " }}}
 
 " Terminal {{{
-" ====================================================================
+" --------------------------------------------------------------------
 nnoremap <silent> <leader><Enter> :terminal<CR>
 
 " Opening splits with terminal in all directions
@@ -500,7 +548,17 @@ tnoremap <C-\><C-\> <C-\><C-n>:bd!<CR>
 " }}}
 
 
-" Autocommands {{{
+" Commands {{{
+" ===================================================================
+command! What echo synIDattr(synID(line('.'), col('.'), 1), 'name')
+
+" Read shell command ouput into a temperary buffer
+command! -nargs=* -complete=shellcmd R new | setlocal buftype=nofile bufhidden=hide noswapfile | r !<args>
+
+" }}}
+
+
+" Misc Autocommands {{{
 " ===================================================================
 augroup reload_vimrc
     autocmd! BufWritePost $MYVIMRC source % | echom "Reloaded " . $MYVIMRC | redraw

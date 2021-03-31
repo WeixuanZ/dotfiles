@@ -92,4 +92,4 @@ haskell: ## Install Haskell Platform and Stack
 
 # This target: MIT (c) Jess Frazelle, https://github.com/jessfraz/dotfiles/blob/master/Makefile
 help: ## Show this help message
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(call color,$(OBJ_COLOR),%-30s) %s\n", $$1, $$2}'
