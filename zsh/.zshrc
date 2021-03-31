@@ -8,7 +8,16 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
-ZSH_THEME="agnoster"
+ZSH_THEME="spaceship"
+SPACESHIP_PROMPT_FIRST_PREFIX_SHOW=true
+SPACESHIP_DIR_PREFIX=' '
+SPACESHIP_PROMPT_ADD_NEWLINE=false
+SPACESHIP_PROMPT_SEPARATE_LINE=false
+SPACESHIP_VI_MODE_SHOW=false
+SPACESHIP_EXEC_TIME_SHOW=false
+SPACESHIP_DOCKER_SHOW=false
+SPACESHIP_VENV_PREFIX="("
+SPACESHIP_VENV_SUFFIX=") "
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -21,7 +30,7 @@ ZSH_THEME="agnoster"
 
 # Uncomment the following line to use hyphen-insensitive completion.
 # Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
+HYPHEN_INSENSITIVE="true"
 
 # Uncomment the following line to disable bi-weekly auto-update checks.
 # DISABLE_AUTO_UPDATE="true"
@@ -42,15 +51,15 @@ ZSH_THEME="agnoster"
 # DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
- ENABLE_CORRECTION="true"
+ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
- COMPLETION_WAITING_DOTS="true"
+COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
 # much, much faster.
- DISABLE_UNTRACKED_FILES_DIRTY="true"
+DISABLE_UNTRACKED_FILES_DIRTY="true"
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
@@ -63,108 +72,50 @@ ZSH_THEME="agnoster"
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
-# Which plugins would you like to load?
-# Standard plugins can be found in ~/.oh-my-zsh/plugins/*
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
 
-################################################################
+plugins=(zsh-vi-mode z zsh-autosuggestions sublime osx git colored-man-pages autoswitch_virtualenv docker docker-compose zsh-syntax-highlighting)
 
 
-plugins=(vi-mode z zsh-autosuggestions zsh-syntax-highlighting sublime osx git colored-man-pages autoswitch_virtualenv docker docker-compose)
+ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
+# zsh-vi-mode will overwrite key bindings, so add them after the plugin init
+function zvm_after_init() {
+    [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+    bindkey '^ ' autosuggest-accept
+}
 
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=6'
+ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+ZSH_AUTOSUGGEST_USE_ASYNC=true
 
-################################################################
-
-# # Homebew shell completion
-# if type brew &>/dev/null; then
-#   FPATH=$(brew --prefix)/share/zsh/site-functions:$FPATH
-
-#   autoload -Uz compinit
-#   compinit
-# fi
-
-
-# ZSH_DISABLE_COMPFIX="true"
-
-source $ZSH/oh-my-zsh.sh
-
-# User configuration
-
-export TERM=xterm-256color-italic
-export BAT_THEME="Monokai Extended"
-
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=236'
-# ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion)
-
-# for the autoswitch_virtualenv plugin, specifies where the virtualenvs are created by default
+# Specifies where the virtualenvs are created by default
 AUTOSWITCH_VIRTUAL_ENV_DIR="$HOME/.virtualenvs"
 
 
+source $ZSH/oh-my-zsh.sh
+
+
+# -----------------------------------------------------------------------------
+
+
+export EDITOR=vim
+export TERM=xterm-256color-italic
+export BAT_THEME="Monokai Extended"
+
 # export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-alias zshconfig="sudo subl ~/.zshrc"
-alias brewlistd="brew list -1 | while read cask; do echo -ne \$fg[blue] \$cask \$fg[white]; brew uses \$cask --installed | awk '{printf(\" %s \", \$0)}'; echo \"\"; done"
-alias cat='bat --paging=never'
-alias wordcount="find . -name '*.md' -type f -exec wc -w {} + | tail -n1"
-alias gatekeeper="$HOME/.oh-my-zsh/custom/GateKeeper_Helper.command"
-alias -g Z='| fzf'
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-
-function matlab {
-    /Applications/MATLAB_R2020b.app/bin/matlab -nodesktop -nosplash $*
-}
-
-function latexinit {
-    cp ~/Code/wex/wex.cls .
-    cp ~/Code/wex/.gitignore .
-    echo "\\\\documentclass[]{wex}\n\\\\title{DefaultTitle}\n\n\n\\\\begin{document}\n\\\\wextitle\n\n\n\\\\end{document}" >> ${1:-report}.tex
-    vim ${1:-report}.tex +VimtexCompile
-}
-
-function lscolor {
-    for i in {0..255} ; do
-        printf "\x1b[48;5;%sm%3d\e[0m " "$i" "$i"
-        if (( i == 15 )) || (( i > 15 )) && (( (i-15) % 6 == 0 )); then
-            printf "\n";
-        fi
-    done
-}
-
-# etc
 
 # for subl to work
 export PATH="/usr/local/sbin:$PATH"
-
-export EDITOR=vim
 
 # iTerm2 shell integration
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 [ -f "${GHCUP_INSTALL_BASE_PREFIX:=$HOME}/.ghcup/env" ] && source "${GHCUP_INSTALL_BASE_PREFIX:=$HOME}/.ghcup/env"
 
-# heroku autocomplete setup
+# Heroku autocomplete setup
 HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
+
+# Ruby
+export PATH="/usr/local/opt/ruby/bin:$PATH"
 
 # Android
 export ANDROID_HOME=$HOME/Library/Android/sdk
@@ -176,11 +127,51 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools
 # Tikzit
 export PATH="$PATH:/Applications/TikZiT.app/Contents/MacOS"
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-# like normal z when used with arguments but displays an fzf prompt when used without.
+# -----------------------------------------------------------------------------
+
+
+alias cat='bat --paging=never'
+alias be='bundle exec'
+alias wordcount="find . -name '*.md' -type f -exec wc -w {} + | tail -n1"
+alias gatekeeper="$HOME/.oh-my-zsh/custom/GateKeeper_Helper.command"
+alias -g Z='| fzf'
+
+function matlab {
+    /Applications/MATLAB_R*.app/bin/matlab -nodesktop -nosplash $*
+}
+
+function latexinit {
+    cp ~/Code/wex/wex.cls .
+    cp ~/Code/wex/.gitignore .
+    echo "\\\\documentclass[]{wex}\n\\\\title{DefaultTitle}\n\n\n\\\\begin{document}\n\\\\wextitle\n\n\n\\\\end{document}" >> ${1:-report}.tex
+    vim ${1:-report}.tex +VimtexCompile
+}
+
+# By Mark H. Nichols, https://zanshin.net/2014/02/03/how-to-list-brew-dependencies/
+function brewlsd {
+    brew list -1 | while read cask
+    do
+        echo -ne $fg[blue] $cask $fg[white]
+        brew uses --installed $cask | awk '{printf(" %s ", $0)}'
+        echo ""
+    done
+}
+
+# By Tom Hale, https://askubuntu.com/a/821163
+function lscolor {
+    for i in {0..255} ; do
+        printf "\x1b[48;5;%sm%3d\e[0m " "$i" "$i"
+        if (( i == 15 )) || (( i > 15 )) && (( (i-15) % 6 == 0 )); then
+            printf "\n";
+        fi
+    done
+}
+
+# By Vinicius De Antoni, https://betterprogramming.pub/boost-your-command-line-productivity-with-fuzzy-finder-985aa162ba5d
+# like normal z when used with arguments but displays an fzf prompt when used without
 unalias z 2> /dev/null
-z() {
+function z {
     [ $# -gt 0 ] && _z "$*" && return
     cd "$(_z -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
 }
