@@ -1,5 +1,5 @@
 " Plugins {{{
-call plug#begin('~/.vim/plugged')
+call plug#begin(has('ivim') ? '~/ivim' : '~/.vim/plugged')
 
 " Completion {{{
 " ====================================================================
@@ -44,7 +44,7 @@ Plug 'junegunn/fzf.vim'
 
     let $FZF_DEFAULT_OPTS = '--reverse --cycle --preview-window right:60%' " the defaults are pretty good
     function SetFZFCommand() " ignore the current file
-        let $FZF_DEFAULT_COMMAND = printf('rg --files --hidden -g ''!{.git,node_modules,vendor}/*'' -g ''!%s''', shellescape(expand('%'))) " :Files calls this as source
+        let $FZF_DEFAULT_COMMAND = printf('rg --files --hidden -g ''!%s'' -g ''!{.git,node_modules}/*''', len(expand('%')) != 0 ? shellescape(expand('%')) : '_') " :Files calls this as source
     endfunction
     augroup set_fzf_command
         autocmd!
@@ -337,31 +337,32 @@ augroup set_relative_number
     autocmd BufLeave,FocusLost   * set norelativenumber
 augroup END
 
-highlight CursorLine ctermbg=0
-highlight CursorLineNr cterm=bold ctermfg=green
+highlight Cursor ctermbg=green guibg=#a4e400
+highlight CursorLine ctermbg=0 guibg=NONE
+highlight CursorLineNr cterm=bold ctermfg=green gui=bold guifg=#a4e400
 augroup cursor_line_highlight
     autocmd!
-    autocmd InsertEnter * hi CursorLineNr ctermfg=yellow
-    autocmd InsertLeave * hi CursorLineNr ctermfg=green
+    autocmd InsertEnter * hi CursorLineNr ctermfg=yellow guifg=#ffff87
+    autocmd InsertLeave * hi CursorLineNr ctermfg=green guifg=#a4e400
 augroup END
-highlight MatchParen ctermfg=green
-highlight SpecialKey ctermbg=0
-highlight Conceal ctermfg=yellow
+highlight MatchParen ctermfg=green guifg=#a4e400
+highlight SpecialKey ctermbg=0 guibg=NONE
+highlight Conceal ctermfg=yellow guifg=#ffff87
 highlight ColorColumn ctermbg=236
-highlight SpellBad cterm=undercurl ctermbg=NONE ctermfg=NONE
-highlight SpellCap cterm=undercurl ctermbg=NONE ctermfg=NONE
-highlight SpellLocal cterm=underline ctermbg=NONE ctermfg=NONE
-highlight SpellRare ctermbg=NONE ctermfg=NONE
+highlight SpellBad cterm=undercurl ctermbg=NONE ctermfg=NONE guibg=NONE guifg=NONE
+highlight SpellCap cterm=undercurl ctermbg=NONE ctermfg=NONE guibg=NONE guifg=NONE
+highlight SpellLocal cterm=underline ctermbg=NONE ctermfg=NONE guibg=NONE guifg=NONE
+highlight SpellRare ctermbg=NONE ctermfg=NONE guibg=NONE guifg=NONE
 
 " Cursor
 if exists('$TMUX') " tmux will only forward escape sequences to the terminal if surrounded by a DCS sequence
-    let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
-    let &t_SR = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
-    let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
+    let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]1337;CursorShape=1\x7\<Esc>\\"
+    let &t_SR = "\<Esc>Ptmux;\<Esc>\<Esc>]1337;CursorShape=2\x7\<Esc>\\"
+    let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]1337;CursorShape=0\x7\<Esc>\\"
 else
-    let &t_SI = "\<Esc>]50;CursorShape=1\x7"
-    let &t_SR = "\<Esc>]50;CursorShape=2\x7"
-    let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+    let &t_SI = "\<Esc>]1337;CursorShape=1\x7"
+    let &t_SR = "\<Esc>]1337;CursorShape=2\x7"
+    let &t_EI = "\<Esc>]1337;CursorShape=0\x7"
 endif
 " Undercurl
 let &t_ZH = "\e[3m"
@@ -411,6 +412,8 @@ nnoremap <leader>p "+p
 nnoremap <leader>]p "+]p
 nnoremap <leader>y "+y
 vnoremap <leader>y "+y
+nnoremap <leader>' "+
+vnoremap <leader>' "+
 
 " This unsets the "last search pattern" register by hitting return
 nnoremap <CR> :nohlsearch<CR><CR>
