@@ -14,23 +14,37 @@ link: ## Link all the dot files tracked by git into HOME
 	@for file in $$(git ls-files | egrep '^\/?(?:\w+\/)*(\.\w+)'); do \
 		filename=.$${file#*.}; \
 		if [ -f "$(HOME)/$$filename" ] && [ ! -L "$(HOME)/$$filename" ]; then \
-			echo "$(call color,$(WARN_COLOR),$$filename already exist: renaming it to $$filename.orig)"; mv $(HOME)/$$filename $(HOME)/$$filename.orig; fi; \
+			echo "$(call color,$(WARN_COLOR),$$filename already exist: renaming it to $$filename.orig)"; \
+			mv $(HOME)/$$filename $(HOME)/$$filename.orig; fi; \
 		ln -vsf $(DOTFILES_DIR)/$$file $(HOME)/$$filename; done
 
-
-packages: brew-packages python-packages ## Install Homebrew and Python packages
 
 brew: ## Install Homebrew
 	is-executable brew || sh -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+update-brewfile: brew ## Update install/Brewfile and install/Appfile with packages/apps installed
+	(cd $(DOTFILES_DIR) && brew bundle dump)
+	egrep '^(tap|brew)\s.*' $(DOTFILES_DIR)/Brewfile > $(DOTFILES_DIR)/install/Brewfile
+	egrep '^(tap|cask|mas)\s.*' $(DOTFILES_DIR)/Brewfile > $(DOTFILES_DIR)/install/Appfile
+	@echo '# vim: syntax=brewfile' >> $(DOTFILES_DIR)/install/Appfile
+	rm $(DOTFILES_DIR)/Brewfile
+
+
+packages: brew-packages python-packages ## Install Homebrew and Python packages
+
 quicklook_lib_dir = $(HOME)/Library/QuickLook
-brew-packages: brew ## Install Homebrew packages and casks listed in install/Brewfile
+brew-packages: brew ## Install Homebrew packages
 	brew bundle --file $(DOTFILES_DIR)/install/Brewfile
-	[ -d "$(quicklook_lib_dir)" ] && xattr -d -r com.apple.quarantine $(quicklook_lib_dir)
 
 python-packages: brew ## Install Python packages listed in install/requirements.txt
 	is-brew-package python || brew install python
 	pip3 install -r $(DOTFILES_DIR)/install/requirements.txt
+
+
+apps: brew ## Install all casks and mas apps
+	is-brew-package mas || brew install mas
+	brew bundle --file $(DOTFILES_DIR)/install/Appfile
+	[ -d "$(quicklook_lib_dir)" ] && xattr -d -r com.apple.quarantine $(quicklook_lib_dir)
 
 
 ZSH_PLUGINS = jeffreytse/zsh-vi-mode MichaelAquilina/zsh-autoswitch-virtualenv zsh-users/zsh-autosuggestions zsh-users/zsh-syntax-highlighting

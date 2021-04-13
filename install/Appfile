@@ -1,0 +1,58 @@
+tap "heroku/brew"
+tap "homebrew/bundle"
+tap "homebrew/cask"
+tap "homebrew/core"
+cask "amethyst"
+cask "apparency"
+cask "cryptomator"
+cask "cyberduck"
+cask "gcc-arm-embedded"
+cask "hex-fiend"
+cask "hiddenbar"
+cask "iterm2"
+cask "imageoptim"
+cask "jupyter-notebook-viewer"
+cask "keka"
+cask "ltspice"
+cask "lunar"
+cask "mark-text"
+cask "netnewswire"
+cask "netron"
+cask "ngrok"
+cask "pock"
+cask "postman"
+cask "qlcolorcode"
+cask "qlstephen"
+cask "react-native-debugger"
+cask "signal"
+cask "skim"
+cask "syncalicious"
+cask "thunderbird"
+cask "tikzit"
+cask "vnc-viewer"
+mas "circuitlatex", id: 1200311322
+mas "DaVinci Resolve", id: 571213070
+mas "Disk Speed Test", id: 425264550
+mas "GarageBand", id: 682658836
+mas "GeoGebra Geometry", id: 1294020062
+mas "iMovie", id: 408981434
+mas "Ka-Block!", id: 1335413823
+mas "Keynote", id: 409183694
+mas "MeetingBar", id: 1532419400
+mas "Messenger", id: 1480068668
+mas "Microsoft Excel", id: 462058435
+mas "Microsoft PowerPoint", id: 462062816
+mas "Microsoft Word", id: 462054704
+mas "Numbers", id: 409203825
+mas "OhMyStar", id: 1218642292
+mas "OneDrive", id: 823766827
+mas "Pages", id: 409201541
+mas "PiPifier", id: 1160374471
+mas "SimpleLogin", id: 1494051017
+mas "Slack", id: 803453959
+mas "Speedtest", id: 1153157709
+mas "Vimari", id: 1480933944
+mas "WeTransfer", id: 1114922065
+mas "WhatsApp", id: 1147396723
+mas "Xcode", id: 497799835
+# vim: syntax=brewfile
