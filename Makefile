@@ -30,18 +30,22 @@ update-brewfile: brew ## Update install/Brewfile and install/Appfile with packag
 	rm $(DOTFILES_DIR)/Brewfile
 
 
-packages: brew-packages python-packages ## Install Homebrew and Python packages
+packages: brew-packages python-packages node-packages ## Install Homebrew, Python and Node packages
 
 quicklook_lib_dir = $(HOME)/Library/QuickLook
-brew-packages: brew ## Install Homebrew packages
+brew-packages: brew ## Install Homebrew packages listed in install/Brewfile
 	brew bundle --file $(DOTFILES_DIR)/install/Brewfile
 
-python-packages: brew ## Install Python packages listed in install/requirements.txt
+python-packages: brew ## Install Python packages listed in install/Pythonfile
 	is-brew-package python || brew install python
-	pip3 install -r $(DOTFILES_DIR)/install/requirements.txt
+	pip3 install -r $(DOTFILES_DIR)/install/Pythonfile
+
+node-packages: brew ## Install Node packages listed in install/Nodefile
+	is-brew-package node || brew install node
+	npm install -g $(shell cat $(DOTFILES_DIR)/install/Nodefile)
 
 
-apps: brew ## Install all casks and mas apps
+apps: brew ## Install all casks and mas apps listed in install/Appfile
 	is-brew-package mas || brew install mas
 	brew bundle --file $(DOTFILES_DIR)/install/Appfile
 	[ -d "$(quicklook_lib_dir)" ] && xattr -d -r com.apple.quarantine $(quicklook_lib_dir)

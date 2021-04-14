@@ -101,6 +101,9 @@ export EDITOR=vim
 export TERM=xterm-256color-italic
 export BAT_THEME="Monokai Extended"
 
+export FZF_DEFAULT_COMMAND="rg --files --hidden -g '!**/{.git,node_modules}/*'"
+export FZF_CTRL_T_COMMAND="rg --files --hidden -g '!**/{.git,node_modules,Library,.Trash}/*'"
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # for subl to work
@@ -126,6 +129,8 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools
 
 # Tikzit
 export PATH="$PATH:/Applications/TikZiT.app/Contents/MacOS"
+
+eval $(thefuck --alias)
 
 
 # -----------------------------------------------------------------------------
