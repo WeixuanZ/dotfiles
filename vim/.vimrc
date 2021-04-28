@@ -3,23 +3,19 @@ call plug#begin(has('ivim') ? '~/ivim' : '~/.vim/plugged')
 
 " Completion {{{
 " ====================================================================
-Plug 'ervandew/supertab'
-    let g:SuperTabClosePreviewOnPopupClose = 1
-    let g:SuperTabDefaultCompletionType = '<C-n>'
 Plug 'valloric/youcompleteme'
+    set completeopt-=preview
+    let g:ycm_seed_identifiers_with_syntax = 1
     let g:ycm_autoclose_preview_window_after_completion = 1
-    let g:ycm_complete_in_strings = 1
     let g:ycm_show_diagnostics_ui = 0 " use ALE for linting
+    " trigger for everything, maybe not a good idea though, we will see about speed...
+    let g:ycm_semantic_triggers = { 'python': ['re!\w{2,}\.?'] }
     nnoremap <leader>d :YcmCompleter GoTo<CR>
     nnoremap <leader>gr :YcmCompleter GoToReferences<CR>
 Plug 'sirver/ultisnips'
-    " make YCM compatible with UltiSnips (using supertab)
-    let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
-    let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
-    " better key bindings for UltiSnipsExpandTrigger
-    let g:UltiSnipsExpandTrigger = '<tab>'
-    let g:UltiSnipsJumpForwardTrigger = '<Space><tab>'
-    let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
+    let g:UltiSnipsExpandTrigger = '<C-j>'
+    let g:UltiSnipsJumpForwardTrigger = '<C-j>'
+    let g:UltiSnipsJumpBackwardTrigger = '<C-k>'
 Plug 'honza/vim-snippets'
 " }}}
 
@@ -28,7 +24,7 @@ Plug 'honza/vim-snippets'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
     nnoremap <silent> <C-p> :Files<CR>
-    nnoremap <silent> <leader>r :RG<CR>
+    nnoremap <silent> <leader>R :RG<CR>
     nnoremap <silent> <leader>f :BLines<CR>
     nnoremap <silent> <leader>b :Buffer<CR>
     nnoremap <silent> <leader>A :Windows<CR>
@@ -103,10 +99,7 @@ Plug 'kshenoy/vim-signature'
 Plug 'tpope/vim-surround'
     " cs'", ds", ysiw]
 Plug 'alvan/vim-closetag'
-Plug 'tmsvg/pear-tree'
-    let g:pear_tree_smart_openers = 1
-    let g:pear_tree_smart_closers = 1
-    let g:pear_tree_smart_backspace = 1
+Plug 'jiangmiao/auto-pairs'
 Plug 'scrooloose/nerdcommenter'
     " <leader>c<space>, <leader>c$, <leader>cA
     let g:NERDSpaceDelims = 1
@@ -123,12 +116,14 @@ Plug 'mbbill/undotree'
 " Git {{{
 " ====================================================================
 Plug 'tpope/vim-fugitive'
-    noremap <leader>gs :Gstatus<CR>
+    noremap <leader>gs :Git<CR>
     noremap <leader>gb :Git blame<CR>
     noremap <leader>gd :Git diff<CR>
     noremap <leader>gt :Git diff --staged<CR>
     nnoremap <leader>gu :Gread<CR>
     nnoremap <leader>gw :Gwrite<CR>
+    nnoremap <leader>gh :diffget //2<CR>
+    nnoremap <leader>gl :diffget //3<CR>
 Plug 'airblade/vim-gitgutter'
     " [c, ]c, <leader>hp, <leader>hs, <leader>hu
     let g:gitgutter_max_signs = 200
@@ -231,8 +226,29 @@ Plug 'goerz/jupytext.vim'
 
 " Utilities {{{
 " ====================================================================
+Plug 'skywind3000/asyncrun.vim'
+    let g:asyncrun_open = 10
+    nnoremap <leader>r :call AsyncRunOrExecute()<CR>
+    function AsyncRunOrExecute() " {{{
+        :AsyncStop
+        if &filetype ==# 'python'
+            execute ':AsyncRun python3 '.expand('%:t')
+        elseif &filetype ==# 'sh'
+            execute ':AsyncRun ./'.expand('%:t')
+        else
+            let l:command = input('Command: ')
+            if !empty(l:command)
+                " execute ':AsyncRun -mode=term -focus=0 -rows=10 '.l:command
+                execute ':AsyncRun '.l:command
+            else
+                echom 'No command given'
+            endif
+        endif
+    endfunction " }}}
 Plug 'tpope/vim-unimpaired'
     " [<Space> and ]<Space>
+Plug 'tpope/vim-repeat'
+Plug 'junegunn/vim-peekaboo'
 Plug 'tyru/open-browser.vim'
     let g:netrw_nogx = 1 " disable netrw's gx mapping, which is currently not working on macOS
     nmap gx <Plug>(openbrowser-smart-search)
@@ -327,7 +343,8 @@ set number
 function! SetRelativenumber() " {{{
     " Help files don't get numbering so without this check we'll get an
     " annoying shift in the text when going in and out of a help buffer
-    if &filetype != 'help'
+    let rel_number_ignore = ['help', 'nerdtree', 'undotree']
+    if index(rel_number_ignore, &filetype) == -1
         set relativenumber
     endif
 endfunction " }}}
@@ -392,14 +409,13 @@ onoremap in{ :<c-u>normal! f{vi{<cr>
 onoremap il{ :<c-u>normal! F}vi{<cr>
 onoremap ia{ :<c-u>normal! f{va{<cr>
 
-nnoremap <C-c> :edit ~/.vimrc<CR>
+nnoremap <leader>C :edit ~/.vimrc<CR>
 
 nnoremap Y y$
 nnoremap E $
 nnoremap B ^
 nnoremap <leader>w :w<CR>
 nnoremap <leader>a =ip
-nnoremap <leader>R :retab<CR>
 nnoremap <leader>z za
 nnoremap <leader>s :%s//g<Left><Left>
 vnoremap <leader>s :s//g<Left><Left>
@@ -409,7 +425,7 @@ noremap vA ggVG
 
 " Clipboard
 nnoremap <leader>p "+p
-nnoremap <leader>]p "+]p
+vnoremap <leader>p "+p
 nnoremap <leader>y "+y
 vnoremap <leader>y "+y
 nnoremap <leader>' "+
@@ -510,30 +526,6 @@ function! ToggleQuickFix() " {{{
 endfunction " }}}
 " }}}
 
-" Capitalization {{{
-" -------------------------------------------------------------------
-if (&tildeop)
-    nnoremap gcw guw~l
-    nnoremap gcW guW~l
-    nnoremap gciw guiw~l
-    nnoremap gciW guiW~l
-    nnoremap gcis guis~l
-    nnoremap gc$ gu$~l
-    nnoremap gcgc guu~l
-    nnoremap gcc guu~l
-    vnoremap gc gu~l
-else
-    nnoremap gcw guw~h
-    nnoremap gcW guW~h
-    nnoremap gciw guiw~h
-    nnoremap gciW guiW~h
-    nnoremap gcis guis~h
-    nnoremap gc$ gu$~h
-    nnoremap gcgc guu~h
-    nnoremap gcc guu~h
-    vnoremap gc gu~h
-endif " }}}
-
 " Terminal {{{
 " --------------------------------------------------------------------
 nnoremap <silent> <leader><Enter> :terminal<CR>
@@ -553,7 +545,11 @@ tnoremap <C-\><C-\> <C-\><C-n>:bd!<CR>
 
 " Commands {{{
 " ===================================================================
-command! What echo synIDattr(synID(line('.'), col('.'), 1), 'name')
+command! What call SynGroup()
+function SynGroup()
+    let l:s = synID(line('.'), col('.'), 1)
+    echo synIDattr(l:s, 'name') . ' -> ' . synIDattr(synIDtrans(l:s), 'name')
+endfunction
 
 " Read shell command ouput into a temperary buffer
 command! -nargs=* -complete=shellcmd R new | setlocal buftype=nofile bufhidden=hide noswapfile | r !<args>
@@ -583,6 +579,17 @@ augroup help_nav
         nnoremap <buffer> s /\|\zs\S\+\ze\|<CR>
         nnoremap <buffer> S ?\|\zs\S\+\ze\|<CR>
     endfunction
+augroup END
+
+augroup hex_editing
+    autocmd!
+    autocmd BufReadPre  *.bin let &bin=1
+    autocmd BufReadPost *.bin if &bin | %!xxd
+    autocmd BufReadPost *.bin set filetype=xxd | endif
+    autocmd BufWritePre *.bin if &bin | %!xxd -r
+    autocmd BufWritePre *.bin endif
+    autocmd BufWritePost *.bin if &bin | %!xxd
+    autocmd BufWritePost *.bin set nomodified | endif
 augroup END
 
 " }}}

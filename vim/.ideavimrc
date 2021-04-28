@@ -1,0 +1,43 @@
+source ~/.vimrc
+
+let mapleader = ' '
+set surround
+set easymotion
+
+unmap <space><space>
+unmap <space>e
+unmap /
+unmap n
+unmap N
+
+nnoremap <leader>r :action Run<cr>
+nnoremap <leader>c :action Stop<cr>
+
+nnoremap <leader>g :action ShowIntentionActions<cr>
+nnoremap <leader>gq :action ReformatCode<cr>
+nnoremap <leader>re :action RenameElement<cr>
+nnoremap <leader>rf :action RenameFile<cr>
+
+nnoremap <leader><leader> :action SearchEverywhere<cr>
+nnoremap <leader>n :action SelectInProjectView<cr>
+nnoremap <leader>f :action FindInPath<cr>
+nnoremap <leader>H :action Vcs.ShowTabbedFileHistory<cr>
+
+nnoremap <C-p> :action GotoFile<cr>
+nnoremap <C-j> :action GotoNextError<cr>
+nnoremap <C-k> :action GotoPreviousError<cr>
+nnoremap <leader>ga :action GotoAction<cr>
+nnoremap <leader>gi :action GotoImplementation<cr>
+nnoremap <leader>gs :action GotoSuperMethod<cr>
+nnoremap <leader>gd :action GotoDeclaration<cr>
+nnoremap <leader>gt :action GotoTest<cr>
+nnoremap <leader>gr :action GotoRelated<cr>
+
+nnoremap <leader>b :action ToggleLineBreakpoint<cr>
+nnoremap <leader>o :action FileStructurePopup<cr>
+
+nnoremap <leader>v :action SplitVertically<cr>
+nnoremap <leader>h :action PrevSplitter<cr>
+nnoremap <leader>l :action NextSplitter<cr>
+nnoremap <leader><Enter> :action ActivateTerminalToolWindow<cr>
+nnoremap <leader>z :action ToggleDistractionFreeMode<cr>
