@@ -5,7 +5,6 @@ call plug#begin(has('ivim') ? '~/ivim' : '~/.vim/plugged')
 " ====================================================================
 Plug 'valloric/youcompleteme'
     set completeopt-=preview
-    let g:ycm_seed_identifiers_with_syntax = 1
     let g:ycm_autoclose_preview_window_after_completion = 1
     let g:ycm_show_diagnostics_ui = 0 " use ALE for linting
     " trigger for everything, maybe not a good idea though, we will see about speed...
@@ -64,12 +63,13 @@ Plug 'junegunn/fzf.vim'
     endfunction " }}}
 
 Plug 'airblade/vim-rooter'
+Plug 'aymericbeaumet/vim-symlink'
 Plug 'preservim/nerdtree'
     let g:NERDTreeShowHidden = 1
     let g:NERDTreeAutoDeleteBuffer = 1
     let g:NERDTreeCascadeOpenSingleChildDir = 1
     nnoremap <leader>n :call NERDTreeToggleAndFind()<CR>
-    nnoremap <C-n> :NERDTreeFocus<CR>
+    nnoremap <leader>N :NERDTreeFocus<CR>
     function! NERDTreeToggleAndFind() " {{{
         if (exists('t:NERDTreeBufName') && bufwinnr(t:NERDTreeBufName) != -1)
             execute ':NERDTreeClose'
@@ -87,10 +87,6 @@ Plug 'Lokaltog/vim-easymotion'
     let g:EasyMotion_keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ;'
     map <Space>e <Plug>(easymotion-prefix)
     nmap <Space><Space> <Plug>(easymotion-bd-w)
-    map  / <Plug>(easymotion-sn)
-    omap / <Plug>(easymotion-tn)
-    map  n <Plug>(easymotion-next)
-    map  N <Plug>(easymotion-prev)
 Plug 'kshenoy/vim-signature'
 " }}}
 
@@ -189,9 +185,9 @@ Plug 'lervag/vimtex'
     let g:vimtex_syntax_nospell_comments = 1
     let g:vimtex_format_enabled = 1
     let g:vimtex_fold_enabled = 1
+    let g:vimtex_fold_manual = 1
     " let g:vimtex_quickfix_mode = 1
     let g:vimtex_quickfix_autoclose_after_keystrokes = 5
-    let g:vimtex_indent_lists = []
     augroup tex
         autocmd!
         autocmd FileType tex call TexConfig() " set spell and key maps
@@ -206,6 +202,7 @@ Plug 'lervag/vimtex'
     function TexConfig() " {{{
         setlocal spell spelllang=en_gb
         setlocal formatoptions+=t
+        setlocal foldlevel=3
         nnoremap <buffer><leader>L :VimtexCompile<CR>
         nnoremap <buffer><leader>v :VimtexView<CR>
         nnoremap <silent> <buffer><leader>` :call vimtex#latexmk#errors_open(0)<CR>
@@ -249,6 +246,7 @@ Plug 'tpope/vim-unimpaired'
     " [<Space> and ]<Space>
 Plug 'tpope/vim-repeat'
 Plug 'junegunn/vim-peekaboo'
+Plug 'kristijanhusak/vim-carbon-now-sh'
 Plug 'tyru/open-browser.vim'
     let g:netrw_nogx = 1 " disable netrw's gx mapping, which is currently not working on macOS
     nmap gx <Plug>(openbrowser-smart-search)
@@ -263,12 +261,12 @@ Plug 'patstockwell/vim-monokai-tasty'
 Plug 'vim-airline/vim-airline'
     let g:airline#extensions#wordcount#formatter = 'custom' " fix tex word count
     let g:airline_powerline_fonts = 1
+    let g:airline_symbols = {'colnr': ':'}
 Plug 'vim-airline/vim-airline-themes'
     let g:airline_theme='monokai_tasty'
 Plug 'Yggdroot/indentLine', { 'for': ['python'] }
     let g:indentLine_char = '▏'
-    let g:indentLine_setConceal = 0
-    " let g:indentLine_setConceal = 0 " prevent indentLine from messing stuff up
+    let g:indentLine_setConceal = 0 " prevent indentLine from messing stuff up
     " let g:indentLine_setColors = 0
 " }}}
 
@@ -281,8 +279,7 @@ call plug#end()
 " ===================================================================
 set nocompatible
 set encoding=utf-8
-set conceallevel=2
-" set clipboard=unnamed,unnamedplus
+set conceallevel=0
 set mouse=a
 set modeline
 set hidden                            " Navigate away without saving
@@ -397,10 +394,6 @@ let &t_Ce = "\e[4:0m"
 map <Space> <leader>
 
 inoremap jk <ESC>
-inoremap <C-h> <Left>
-inoremap <C-j> <Down>
-inoremap <C-k> <Up>
-inoremap <C-l> <Right>
 
 onoremap in( :<c-u>normal! f(vi(<cr>
 onoremap il( :<c-u>normal! F)vi(<cr>
@@ -412,10 +405,11 @@ onoremap ia{ :<c-u>normal! f{va{<cr>
 nnoremap <leader>C :edit ~/.vimrc<CR>
 
 nnoremap Y y$
+vmap y ygv<Esc>
 nnoremap E $
 nnoremap B ^
 nnoremap <leader>w :w<CR>
-nnoremap <leader>a =ip
+nnoremap <leader>i =ip
 nnoremap <leader>z za
 nnoremap <leader>s :%s//g<Left><Left>
 vnoremap <leader>s :s//g<Left><Left>
@@ -439,6 +433,13 @@ function! CopyCurrentFilePath() " {{{
     let @+ = expand('%')
     echo @+
 endfunction " }}}
+
+" https://gist.github.com/romainl/3b8cdc6c3748a363da07b1a625cfc666
+function! BreakHere()
+    s/^\(\s*\)\(.\{-}\)\(\s*\)\(\%#\)\(\s*\)\(.*\)/\1\2\r\1\4\6
+    call histdel("/", -1)
+endfunction
+nnoremap K :<C-u>call BreakHere()<CR>
 
 " Move visual selection up and down
 vnoremap J :m '>+1<CR>gv=gv
@@ -554,6 +555,8 @@ endfunction
 " Read shell command ouput into a temperary buffer
 command! -nargs=* -complete=shellcmd R new | setlocal buftype=nofile bufhidden=hide noswapfile | r !<args>
 
+command! Noindent setl noai nocin nosi inde=
+
 " }}}
 
 
@@ -566,6 +569,13 @@ augroup END
 augroup format
     autocmd!
     autocmd BufWritePre * %s/\s\+$//e
+augroup END
+
+augroup languages
+    autocmd!
+    autocmd FileType python,markdown setlocal conceallevel=1
+    autocmd FileType javascript,css,json,yaml setlocal ts=2 sts=2 sw=2
+    autocmd BufEnter,BufNew *.cls set filetype=tex
 augroup END
 
 augroup help_nav
