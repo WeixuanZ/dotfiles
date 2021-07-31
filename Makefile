@@ -25,7 +25,8 @@ link: ## Link all dot files tracked by git into HOME and all files in misc/.conf
 
 
 brew: ## Install Homebrew
-	is-executable brew || sh -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	is-executable brew || bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
+		is-macos || echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.profile;
 
 update-brewfile: brew ## Update install/Brewfile and install/Appfile with packages/apps installed
 	(cd $(DOTFILES_DIR) && brew bundle dump)
@@ -37,12 +38,11 @@ update-brewfile: brew ## Update install/Brewfile and install/Appfile with packag
 
 packages: brew-packages python-packages node-packages ## Install Homebrew, Python and Node packages
 
-quicklook_lib_dir = $(HOME)/Library/QuickLook
 brew-packages: brew ## Install Homebrew packages listed in install/Brewfile
 	brew bundle --file $(DOTFILES_DIR)/install/Brewfile
 
 python-packages: brew ## Install Python packages listed in install/Pythonfile
-	is-brew-package python || brew install python
+	is-brew-package python3 || brew install python3
 	pip3 install -r $(DOTFILES_DIR)/install/Pythonfile
 
 node-packages: brew ## Install Node packages listed in install/Nodefile
@@ -50,7 +50,9 @@ node-packages: brew ## Install Node packages listed in install/Nodefile
 	npm install -g $(shell cat $(DOTFILES_DIR)/install/Nodefile)
 
 
+quicklook_lib_dir = $(HOME)/Library/QuickLook
 apps: brew ## Install all casks and mas apps listed in install/Appfile
+	is-macos || exit 1
 	is-brew-package mas || brew install mas
 	brew bundle --file $(DOTFILES_DIR)/install/Appfile
 	[ -d "$(quicklook_lib_dir)" ] && xattr -d -r com.apple.quarantine $(quicklook_lib_dir)
@@ -74,6 +76,8 @@ zsh: brew ## Install oh-my-zsh and plugins, also symlink .zshrc into HOME
 	tic $(DOTFILES_DIR)/zsh/terminfo
 	# link .zshrc
 	ln -vsf $(DOTFILES_DIR)/zsh/.zshrc $(HOME)/.zshrc
+	# add zsh to valid shells
+	is-macos || command -v zsh | sudo tee -a /etc/shell
 
 
 vim: brew ## Install VimPlug and plugins in .vimrc, which is also symlinked into HOME
@@ -96,6 +100,7 @@ vim-ycm: vim brew-packages ## Install YouCompleteMe for all languages
 
 
 iterm2: brew ## Install and configure iTerm2, install JetBrainsMono font
+	is-macos || exit 1
 	is-installed iTerm || brew install iterm2
 	# install JetBrainsMono
 	curl -fLso font.zip https://download.jetbrains.com/fonts/JetBrainsMono-2.225.zip

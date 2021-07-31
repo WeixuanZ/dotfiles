@@ -1,6 +1,6 @@
 # .files
 
-My dotfiles for macOS.
+My dotfiles for macOS and Linux.
 
 To symlink all dotfiles tracked by git in this repository into your `$HOME`,
 simply use
