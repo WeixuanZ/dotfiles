@@ -2,8 +2,11 @@ tap "heroku/brew"
 tap "homebrew/bundle"
 tap "homebrew/cask"
 tap "homebrew/core"
+cask "1password"
+cask "altserver"
 cask "amethyst"
 cask "apparency"
+cask "audacity"
 cask "cryptomator"
 cask "cyberduck"
 cask "gcc-arm-embedded"
@@ -12,6 +15,7 @@ cask "hiddenbar"
 cask "iterm2"
 cask "imageoptim"
 cask "jupyter-notebook-viewer"
+cask "karabiner-elements"
 cask "keka"
 cask "ltspice"
 cask "lunar"
@@ -19,6 +23,7 @@ cask "mark-text"
 cask "netnewswire"
 cask "netron"
 cask "ngrok"
+cask "openinterminal-lite"
 cask "pock"
 cask "postman"
 cask "qlcolorcode"
@@ -26,6 +31,7 @@ cask "qlstephen"
 cask "react-native-debugger"
 cask "signal"
 cask "skim"
+cask "skype"
 cask "syncalicious"
 cask "thunderbird"
 cask "tikzit"
@@ -36,8 +42,10 @@ mas "Disk Speed Test", id: 425264550
 mas "GarageBand", id: 682658836
 mas "GeoGebra Geometry", id: 1294020062
 mas "iMovie", id: 408981434
+mas "Jira", id: 1475897096
 mas "Ka-Block!", id: 1335413823
 mas "Keynote", id: 409183694
+mas "Klib", id: 1196268448
 mas "MeetingBar", id: 1532419400
 mas "Messenger", id: 1480068668
 mas "Microsoft Excel", id: 462058435

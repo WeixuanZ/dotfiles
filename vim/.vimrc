@@ -179,6 +179,8 @@ Plug 'sheerun/vim-polyglot'
     let g:vim_markdown_math = 1
     let g:vim_markdown_frontmatter = 1
     let g:vim_markdown_edit_url_in = 'current'
+    " SQL
+    let g:sql_type_default = 'pgsql'
 Plug 'lervag/vimtex'
     let g:tex_flavor = 'latex'
     let g:vimtex_view_method = 'skim'

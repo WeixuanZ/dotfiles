@@ -106,7 +106,10 @@ export FZF_CTRL_T_COMMAND="rg --files --hidden -g '!**/{.git,node_modules,Librar
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
-# for subl to work
+# psql
+export PATH="/Library/PostgreSQL/12/bin:$PATH"
+
+# subl
 export PATH="/usr/local/sbin:$PATH"
 
 # iTerm2 shell integration
