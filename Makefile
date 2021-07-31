@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 PATH := $(DOTFILES_DIR)/bin:$(PATH) # some helper shell scripts
 .PHONY: link brew haskell help
@@ -10,9 +11,13 @@ WARN_COLOR  = \033[0;33m
 color = $(1)$(2)\033[m
 
 
-link: ## Link all the dot files tracked by git into HOME
-	@for file in $$(git ls-files | egrep '^\/?(?:\w+\/)*(\.\w+)'); do \
-		filename=.$${file#*.}; \
+link: ## Link all dot files tracked by git into HOME and all files in misc/.config/ into HOME/.config/
+	@for file in $$(git ls-files | egrep '^\/?(((\w+\/)*(\.\w+))|(misc\/\.config\/.+))$$'); do \
+		if [[ $$file == misc/.config/* ]]; then \
+			filename=$${file#*misc/}; \
+			mkdir -p $(HOME)/$${filename%/*}; \
+		else \
+			filename=.$${file#*.}; fi; \
 		if [ -f "$(HOME)/$$filename" ] && [ ! -L "$(HOME)/$$filename" ]; then \
 			echo "$(call color,$(WARN_COLOR),$$filename already exist: renaming it to $$filename.orig)"; \
 			mv $(HOME)/$$filename $(HOME)/$$filename.orig; fi; \
