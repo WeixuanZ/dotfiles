@@ -8,7 +8,12 @@ OBJ_COLOR   = \033[0;36m
 OK_COLOR    = \033[0;32m
 ERROR_COLOR = \033[0;31m
 WARN_COLOR  = \033[0;33m
-color = $(1)$(2)\033[m
+colorize = $(1)$(2)\033[m
+
+create_symlink = if [ -f "$(2)" ] && [ ! -L "$(2)" ]; then \
+		printf "$(call colorize,$(WARN_COLOR),$(2) already exist: renaming it to $(2).orig)\n"; \
+		mv $(2) $(2).orig; fi; \
+	ln -vsf $(1) $(2)
 
 
 link: ## Link all dot files tracked by git into HOME and all files in misc/.config/ into HOME/.config/
@@ -18,10 +23,8 @@ link: ## Link all dot files tracked by git into HOME and all files in misc/.conf
 			mkdir -p $(HOME)/$${filename%/*}; \
 		else \
 			filename=.$${file#*.}; fi; \
-		if [ -f "$(HOME)/$$filename" ] && [ ! -L "$(HOME)/$$filename" ]; then \
-			echo "$(call color,$(WARN_COLOR),$$filename already exist: renaming it to $$filename.orig)"; \
-			mv $(HOME)/$$filename $(HOME)/$$filename.orig; fi; \
-		ln -vsf $(DOTFILES_DIR)/$$file $(HOME)/$$filename; done
+		$(call create_symlink,$(DOTFILES_DIR)/$$file,$(HOME)/$$filename); \
+	done
 
 
 brew: ## Install Homebrew
@@ -50,18 +53,18 @@ node-packages: brew ## Install Node packages listed in install/Nodefile
 	npm install -g $(shell cat $(DOTFILES_DIR)/install/Nodefile)
 
 
-quicklook_lib_dir = $(HOME)/Library/QuickLook
+QUICKLOOK_LIB_DIR = $(HOME)/Library/QuickLook
 apps: brew ## Install all casks and mas apps listed in install/Appfile
 	is-macos || exit 1
 	is-brew-package mas || brew install mas
 	brew bundle --file $(DOTFILES_DIR)/install/Appfile
-	[ -d "$(quicklook_lib_dir)" ] && xattr -d -r com.apple.quarantine $(quicklook_lib_dir)
+	[ -d "$(QUICKLOOK_LIB_DIR)" ] && xattr -d -r com.apple.quarantine $(QUICKLOOK_LIB_DIR)
 
 
 ZSH_PLUGINS = jeffreytse/zsh-vi-mode MichaelAquilina/zsh-autoswitch-virtualenv zsh-users/zsh-autosuggestions zsh-users/zsh-syntax-highlighting
 ZSH_THEMES = denysdovhan/spaceship-prompt
 ZSH_CUSTOM_DIR = $(HOME)/.oh-my-zsh/custom
-clone = $(foreach plugin,$(1),echo "$(call color,$(COM_COLOR),Cloning $(plugin))"; git clone --depth=1 --quiet https://github.com/$(plugin) $(2)/$(notdir $(plugin));)
+clone = $(foreach plugin,$(1),printf "$(call colorize,$(COM_COLOR),Cloning $(plugin))\n"; git clone --depth=1 --quiet https://github.com/$(plugin) $(2)/$(notdir $(plugin));)
 zsh: brew ## Install oh-my-zsh and plugins, also symlink .zshrc into HOME
 	is-brew-package zsh || brew install zsh
 	# oh-my-zsh
@@ -75,7 +78,7 @@ zsh: brew ## Install oh-my-zsh and plugins, also symlink .zshrc into HOME
 	# terminal italic support
 	tic $(DOTFILES_DIR)/zsh/terminfo
 	# link .zshrc
-	ln -vsf $(DOTFILES_DIR)/zsh/.zshrc $(HOME)/.zshrc
+	@$(call create_symlink,$(DOTFILES_DIR)/zsh/.zshrc,$(HOME)/.zshrc)
 	# add zsh to valid shells
 	is-macos || command -v zsh | sudo tee -a /etc/shell
 
@@ -83,15 +86,16 @@ zsh: brew ## Install oh-my-zsh and plugins, also symlink .zshrc into HOME
 vim: brew ## Install VimPlug and plugins in .vimrc, which is also symlinked into HOME
 	is-brew-package vim || brew install vim
 	# link .vimrc
-	ln -vsf $(DOTFILES_DIR)/vim/.vimrc $(HOME)/.vimrc
+	@$(call create_symlink,$(DOTFILES_DIR)/vim/.vimrc,$(HOME)/.vimrc)
 	# undodir
 	mkdir -vp $(HOME)/.vim/undo
 	# VimPlug, install all plugins
 	curl -fLso $(HOME)/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 	vim +PlugInstall +qall
 	# link other *.vim files
-	for file in $$(find $(DOTFILES_DIR)/vim/plugged -name '*.vim'); do\
-		ln -vsf $$file $(HOME)/.vim/$${file#"$(DOTFILES_DIR)/vim/"}; done
+	@for file in $$(find $(DOTFILES_DIR)/vim/plugged -name '*.vim'); do \
+		$(call create_symlink,$$file,$(HOME)/.vim/$${file#"$(DOTFILES_DIR)/vim/"}); \
+	done
 
 VIM_YCM_DIR = $(HOME)/.vim/plugged/youcompleteme
 vim-ycm: vim brew-packages ## Install YouCompleteMe for all languages
@@ -120,4 +124,4 @@ haskell: ## Install Haskell Platform and Stack
 
 # This target: MIT (c) Jess Frazelle, https://github.com/jessfraz/dotfiles/blob/master/Makefile
 help: ## Show this help message
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(call color,$(OBJ_COLOR),%-30s) %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(call colorize,$(OBJ_COLOR),%-30s) %s\n", $$1, $$2}'

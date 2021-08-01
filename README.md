@@ -2,8 +2,8 @@
 
 My dotfiles for macOS and Linux.
 
-To symlink all dotfiles tracked by git in this repository into your `$HOME`,
-simply use
+To symlink all config files tracked by git in this repository into your `$HOME`
+and `$HOME/.config/`, simply use
 
 ```sh
 make
