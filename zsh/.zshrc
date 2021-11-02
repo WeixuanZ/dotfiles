@@ -90,6 +90,22 @@ ZSH_AUTOSUGGEST_USE_ASYNC=true
 # Specifies where the virtualenvs are created by default
 AUTOSWITCH_VIRTUAL_ENV_DIR="$HOME/.virtualenvs"
 
+# Fix slow pastes, could be removed after zsh 5.8
+# https://github.com/zsh-users/zsh-autosuggestions/issues/238
+pasteinit() {
+  OLD_SELF_INSERT=${${(s.:.)widgets[self-insert]}[2,3]}
+  zle -N self-insert url-quote-magic # I wonder if you'd need `.url-quote-magic`?
+}
+
+pastefinish() {
+  zle -N self-insert $OLD_SELF_INSERT
+}
+zstyle :bracketed-paste-magic paste-init pasteinit
+zstyle :bracketed-paste-magic paste-finish pastefinish
+
+# Remove autosuggestion after pasting
+# https://github.com/zsh-users/zsh-autosuggestions/issues/351
+ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -99,6 +115,7 @@ source $ZSH/oh-my-zsh.sh
 
 export EDITOR=vim
 export TERM=xterm-256color-italic
+alias ssh='TERM=xterm-256color ssh'
 export BAT_THEME="Monokai Extended"
 
 export FZF_DEFAULT_COMMAND="rg --files --hidden -g '!**/{.git,node_modules}/*'"

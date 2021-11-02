@@ -860,11 +860,11 @@
 			<key>Guid</key>
 			<string>68E9AAC0-65CF-40DC-88B9-2C7DFA8BAEB1</string>
 			<key>Has Hotkey</key>
-			<false/>
+			<true/>
 			<key>Horizontal Spacing</key>
 			<real>1</real>
 			<key>HotKey Activated By Modifier</key>
-			<true/>
+			<false/>
 			<key>HotKey Alternate Shortcuts</key>
 			<array/>
 			<key>HotKey Characters</key>
@@ -2534,6 +2534,8 @@
 	<string>/-+\~_.</string>
 	<key>disableMetalWhenUnplugged</key>
 	<false/>
+	<key>findMode_iTerm</key>
+	<integer>0</integer>
 	<key>kCPKSelectionViewPreferredModeKey</key>
 	<integer>0</integer>
 	<key>kCPKSelectionViewShowHSBTextFieldsKey</key>

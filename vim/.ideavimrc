@@ -1,43 +1,56 @@
 source ~/.vimrc
 
-let mapleader = ' '
-set surround
-set easymotion
+nnoremap <leader>C :edit ~/.ideavimrc<cr>
+set relativenumber
 
-unmap <space><space>
-unmap <space>e
-unmap /
-unmap n
-unmap N
+nmap <C-h> :tabprevious<cr>
+nmap <C-l> :tabnext<cr>
 
-nnoremap <leader>r :action Run<cr>
-nnoremap <leader>c :action Stop<cr>
+" overwrite unsupported mappings
+unmap <Space><Space>
+unmap <leader>gr
+unmap <leader>ll
+unmap <leader>hn
+unmap <leader>ln
+unmap <leader>kn
+unmap <leader>jn
+unmap <Leader>hh
+unmap <leader>ll
+unmap <leader>kk
+unmap <leader>jj
+unmap <leader>h<Enter>
+unmap <leader>l<Enter>
+unmap <leader>k<Enter>
+unmap <leader>j<Enter>
+nnoremap <leader>n :NERDTreeFind<cr>
 
-nnoremap <leader>g :action ShowIntentionActions<cr>
-nnoremap <leader>gq :action ReformatCode<cr>
-nnoremap <leader>re :action RenameElement<cr>
-nnoremap <leader>rf :action RenameFile<cr>
+nmap <leader>R <Action>(Run)
+nmap <leader>c <Action>(Stop)
 
-nnoremap <leader><leader> :action SearchEverywhere<cr>
-nnoremap <leader>n :action SelectInProjectView<cr>
-nnoremap <leader>f :action FindInPath<cr>
-nnoremap <leader>H :action Vcs.ShowTabbedFileHistory<cr>
+nmap <leader>g <Action>(ShowIntentionActions)
+nmap <leader>gq <Action>(ReformatCode)
+nmap <leader>re <Action>(RenameElement)
+nmap <leader>rf <Action>(RenameFile)
 
-nnoremap <C-p> :action GotoFile<cr>
-nnoremap <C-j> :action GotoNextError<cr>
-nnoremap <C-k> :action GotoPreviousError<cr>
-nnoremap <leader>ga :action GotoAction<cr>
-nnoremap <leader>gi :action GotoImplementation<cr>
-nnoremap <leader>gs :action GotoSuperMethod<cr>
-nnoremap <leader>gd :action GotoDeclaration<cr>
-nnoremap <leader>gt :action GotoTest<cr>
-nnoremap <leader>gr :action GotoRelated<cr>
+nmap <Space><Space> <Action>(SearchEverywhere)
+nmap <leader>f <Action>(FindInPath)
+nmap <leader>H <Action>(Vcs.ShowTabbedFileHistory)
 
-nnoremap <leader>b :action ToggleLineBreakpoint<cr>
-nnoremap <leader>o :action FileStructurePopup<cr>
+nmap <C-p> <Action>(GotoFile)
+nmap <C-j> <Action>(GotoNextError)
+nmap <C-k> <Action>(GotoPreviousError)
+nmap <leader>ga <Action>(GotoAction)
+nmap <leader>gi <Action>(GotoImplementation)
+nmap <leader>gs <Action>(GotoSuperMethod)
+nmap <leader>gd <Action>(GotoDeclaration)
+nmap <leader>gt <Action>(GotoTest)
+nmap <leader>gr <Action>(GotoRelated)
 
-nnoremap <leader>v :action SplitVertically<cr>
-nnoremap <leader>h :action PrevSplitter<cr>
-nnoremap <leader>l :action NextSplitter<cr>
-nnoremap <leader><Enter> :action ActivateTerminalToolWindow<cr>
-nnoremap <leader>z :action ToggleDistractionFreeMode<cr>
+nmap <leader>b <Action>(ToggleLineBreakpoint)
+nmap <leader>o <Action>(FileStructurePopup)
+
+nmap <leader>v <Action>(SplitVertically)
+nmap <leader>h <Action>(PrevSplitter)
+nmap <leader>l <Action>(NextSplitter)
+nmap <leader><Enter> <Action>(ActivateTerminalToolWindow)
+nmap <leader>z <Action>(ToggleDistractionFreeMode)
