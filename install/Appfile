@@ -2,24 +2,30 @@ tap "heroku/brew"
 tap "homebrew/bundle"
 tap "homebrew/cask"
 tap "homebrew/core"
-cask "1password"
+tap "homebrew/services"
 cask "altserver"
 cask "amethyst"
 cask "apparency"
 cask "audacity"
+cask "blackhole-16ch"
+cask "boop"
 cask "cryptomator"
 cask "cyberduck"
 cask "gcc-arm-embedded"
+cask "hammerspoon"
 cask "hex-fiend"
 cask "hiddenbar"
 cask "iterm2"
 cask "imageoptim"
 cask "jupyter-notebook-viewer"
+cask "kap"
 cask "karabiner-elements"
 cask "keka"
+cask "knockknock"
 cask "ltspice"
 cask "lunar"
 cask "mark-text"
+cask "murus"
 cask "netnewswire"
 cask "netron"
 cask "ngrok"
@@ -42,7 +48,6 @@ mas "Disk Speed Test", id: 425264550
 mas "GarageBand", id: 682658836
 mas "GeoGebra Geometry", id: 1294020062
 mas "iMovie", id: 408981434
-mas "Jira", id: 1475897096
 mas "Ka-Block!", id: 1335413823
 mas "Keynote", id: 409183694
 mas "Klib", id: 1196268448

@@ -17,8 +17,8 @@ create_symlink = if [ -f "$(2)" ] && [ ! -L "$(2)" ]; then \
 
 
 link: ## Link all dot files tracked by git into HOME and all files in misc/.config/ into HOME/.config/
-	@for file in $$(git ls-files | egrep '^\/?(((\w+\/)*(\.\w+))|(misc\/\.config\/.+))$$'); do \
-		if [[ $$file == misc/.config/* ]]; then \
+	@for file in $$(git ls-files | egrep '^\/?(((\w+\/)*(\.\w+))|(misc\/\.\w+\/.+))$$'); do \
+		if [[ $$file == misc/.*/* ]]; then \
 			filename=$${file#*misc/}; \
 			mkdir -p $(HOME)/$${filename%/*}; \
 		else \
@@ -115,6 +115,13 @@ iterm2: brew ## Install and configure iTerm2, install JetBrainsMono font
 	defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "$(DOTFILES_DIR)/iterm2/"
 	defaults write com.googlecode.iterm2.plist LoadPrefsFromCustomFolder -bool true
 	open -a "iTerm"
+
+
+hammerspoon: brew ## Install Hammmerspoon and Spoons
+	is-macos || exit 1
+	is-installed hammerspoon || brew install hammerspoon
+	bash <(curl -s https://raw.githubusercontent.com/dbalatero/VimMode.spoon/master/bin/installer)
+	@$(call create_symlink,$(DOTFILES_DIR)/misc/.hammerspoon/init.lua,$(HOME)/.hammerspoon/init.lua)
 
 
 haskell: ## Install Haskell Platform and Stack
