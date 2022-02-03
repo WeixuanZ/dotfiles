@@ -73,7 +73,7 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
 
-plugins=(zsh-vi-mode z zsh-autosuggestions sublime osx git colored-man-pages autoswitch_virtualenv docker docker-compose zsh-syntax-highlighting)
+plugins=(zsh-vi-mode z zsh-autosuggestions sublime macos git colored-man-pages autoswitch_virtualenv docker docker-compose zsh-syntax-highlighting)
 
 
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
@@ -151,6 +151,9 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools
 export PATH="$PATH:/Applications/TikZiT.app/Contents/MacOS"
 
 eval $(thefuck --alias)
+
+# Google Cloud SDK autocomplete
+source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
 
 
 # -----------------------------------------------------------------------------

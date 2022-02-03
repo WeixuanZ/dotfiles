@@ -12,6 +12,9 @@ cask "boop"
 cask "cryptomator"
 cask "cyberduck"
 cask "gcc-arm-embedded"
+cask "ghdl"
+cask "google-cloud-sdk"
+cask "gswitch"
 cask "hammerspoon"
 cask "hex-fiend"
 cask "hiddenbar"
@@ -23,12 +26,15 @@ cask "karabiner-elements"
 cask "keka"
 cask "knockknock"
 cask "ltspice"
-cask "lunar"
+cask "lulu"
+cask "mactex"
 cask "mark-text"
+cask "monitorcontrol"
 cask "murus"
 cask "netnewswire"
 cask "netron"
 cask "ngrok"
+cask "onyx"
 cask "openinterminal-lite"
 cask "pock"
 cask "postman"
@@ -56,6 +62,7 @@ mas "Messenger", id: 1480068668
 mas "Microsoft Excel", id: 462058435
 mas "Microsoft PowerPoint", id: 462062816
 mas "Microsoft Word", id: 462054704
+mas "Notability", id: 360593530
 mas "Numbers", id: 409203825
 mas "OhMyStar", id: 1218642292
 mas "OneDrive", id: 823766827
@@ -65,6 +72,7 @@ mas "SimpleLogin", id: 1494051017
 mas "Slack", id: 803453959
 mas "Speedtest", id: 1153157709
 mas "Vimari", id: 1480933944
+mas "WeChat", id: 836500024
 mas "WeTransfer", id: 1114922065
 mas "WhatsApp", id: 1147396723
 mas "Xcode", id: 497799835

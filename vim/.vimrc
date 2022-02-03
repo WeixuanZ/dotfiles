@@ -156,10 +156,14 @@ Plug 'dense-analysis/ale'
     \   'css': ['stylelint'],
     \   'tex': ['latexindent']
     \}
+    " linter options
+    let g:ale_vhdl_ghdl_options = '--ieee=synopsys --std=08'
+    let g:ale_languagetool_options = '--disable EN_QUOTES'
+    let g:ale_tex_chktex_options = '-I -n3'
+    " appearance
     let g:ale_echo_msg_error_str = 'E'
     let g:ale_echo_msg_warning_str = 'W'
     let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
-    let g:ale_languagetool_options = '--disable EN_QUOTES'
     let g:ale_sign_column_always = 1
     let g:ale_sign_error = '•'
     let g:ale_sign_warning = '•'
@@ -207,7 +211,7 @@ Plug 'lervag/vimtex'
         setlocal foldlevel=3
         nnoremap <buffer><leader>L :VimtexCompile<CR>
         nnoremap <buffer><leader>v :VimtexView<CR>
-        nnoremap <silent> <buffer><leader>` :call vimtex#latexmk#errors_open(0)<CR>
+        nnoremap <buffer><leader>Z :VimtexRefreshFolds<CR>
         " The second argument extends the default vimtex#fzf#run options
         nnoremap <buffer><leader>lt :call vimtex#fzf#run('ctli', { 'left': '20%' })<CR>
     endfunction " }}}
@@ -270,6 +274,12 @@ Plug 'Yggdroot/indentLine', { 'for': ['python'] }
     let g:indentLine_char = '▏'
     let g:indentLine_setConceal = 0 " prevent indentLine from messing stuff up
     " let g:indentLine_setColors = 0
+Plug 'wfxr/minimap.vim'
+    nnoremap <leader>m :MinimapToggle<cr>
+    let g:minimap_highlight_range = 1
+    let g:minimap_git_colors = 1
+    let g:minimap_cursor_color = 'minimapRange'
+    let g:minimap_range_color = 'minimapCursor'
 " }}}
 
 " Initialize plugin system
@@ -408,8 +418,6 @@ nnoremap <leader>C :edit ~/.vimrc<CR>
 
 nnoremap Y y$
 vmap y ygv<Esc>
-nnoremap E $
-nnoremap B ^
 nnoremap <leader>w :w<CR>
 nnoremap <leader>i =ip
 nnoremap <leader>z za
@@ -426,9 +434,6 @@ nnoremap <leader>y "+y
 vnoremap <leader>y "+y
 nnoremap <leader>' "+
 vnoremap <leader>' "+
-
-" This unsets the "last search pattern" register by hitting return
-nnoremap <CR> :nohlsearch<CR><CR>
 
 nnoremap <leader>% :call CopyCurrentFilePath()<CR>
 function! CopyCurrentFilePath() " {{{

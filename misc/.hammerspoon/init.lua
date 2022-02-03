@@ -29,7 +29,7 @@ vim:shouldShowAlertInNormalMode(true)
 vim:setAlertFont("Courier New")
 
 -- Enter normal mode by typing a key sequence
-vim:enterWithSequence('jk')
+-- vim:enterWithSequence('jk')
 
 -- if you want to bind a single key to entering vim, remove the
 -- :enterWithSequence('jk') line above and uncomment the bindHotKeys line
@@ -38,7 +38,7 @@ vim:enterWithSequence('jk')
 -- To customize the hot key you want, see the mods and key parameters at:
 --   https://www.hammerspoon.org/docs/hs.hotkey.html#bind
 --
--- vim:bindHotKeys({ enter = { {'ctrl'}, ';' } })
+vim:bindHotKeys({ enter = { {'ctrl'}, ';' } })
 
 -- }}}
 
@@ -128,6 +128,10 @@ end
 init_wm_binding()
 -- hs.application.watcher.new(auto_tile):start()
 
+-- appNameWatch = hs.application.watcher.new(function(appName, eventType, app)
+    -- hs.alert.show(hs.application.frontmostApplication():name())
+-- end):start()
+
 -- }}}
 
 
@@ -144,7 +148,7 @@ function reloadConfig(files)
         hs.reload()
     end
 end
-myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConfig):start()
+myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/dotfiles/misc/.hammerspoon/", reloadConfig):start()
 hs.notify.new({title="Hammerspoon", informativeText="Config loaded"}):send()
 
 -- }}}
