@@ -1,9 +1,10 @@
 # .files
 
-My dotfiles for macOS and Linux.
+My dotfiles for macOS and Linux.  Personal Homebrew tap is at
+[weixuanz/moonshine](https://github.com/WeixuanZ/homebrew-moonshine).
 
-To symlink all config files tracked by git in this repository into your `$HOME`
-and `$HOME/.config/`, simply use
+To symlink all config files tracked by git in this repository into the correct
+locations in your `$HOME`, simply use
 
 ```sh
 make

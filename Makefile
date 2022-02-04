@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-PATH := $(DOTFILES_DIR)/bin:$(PATH) # some helper shell scripts
+override PATH := $(DOTFILES_DIR)/bin:$(PATH) # some helper shell scripts
 .PHONY: link brew haskell help
 
 COM_COLOR   = \033[0;34m
@@ -22,14 +22,18 @@ link: ## Link all dot files tracked by git into HOME and all files in misc/.conf
 			filename=$${file#*misc/}; \
 			mkdir -p $(HOME)/$${filename%/*}; \
 		else \
-			filename=.$${file#*.}; fi; \
+			filename=.$${file#*.}; \
+		fi; \
 		$(call create_symlink,$(DOTFILES_DIR)/$$file,$(HOME)/$$filename); \
 	done
 
 
 brew: ## Install Homebrew
-	is-executable brew || bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
-		is-macos || echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.profile;
+	@if ! is-executable brew; then \
+		bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
+		is-macos || echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.profile; \
+	fi
+
 
 update-brewfile: brew ## Update install/Brewfile and install/Appfile with packages/apps installed
 	(cd $(DOTFILES_DIR) && brew bundle dump)
@@ -55,7 +59,7 @@ node-packages: brew ## Install Node packages listed in install/Nodefile
 
 QUICKLOOK_LIB_DIR = $(HOME)/Library/QuickLook
 apps: brew ## Install all casks and mas apps listed in install/Appfile
-	is-macos || exit 1
+	@is-macos || (printf "$(call colorize,$(ERROR_COLOR),Not macOS)\n";  exit 1;)
 	is-brew-package mas || brew install mas
 	brew bundle --file $(DOTFILES_DIR)/install/Appfile
 	[ -d "$(QUICKLOOK_LIB_DIR)" ] && xattr -d -r com.apple.quarantine $(QUICKLOOK_LIB_DIR)
@@ -104,7 +108,7 @@ vim-ycm: vim brew-packages ## Install YouCompleteMe for all languages
 
 
 iterm2: brew ## Install and configure iTerm2, install JetBrainsMono font
-	is-macos || exit 1
+	@is-macos || (printf "$(call colorize,$(ERROR_COLOR),Not macOS)\n";  exit 1;)
 	is-installed iTerm || brew install iterm2
 	# install JetBrainsMono
 	curl -fLso font.zip https://download.jetbrains.com/fonts/JetBrainsMono-2.225.zip
@@ -118,7 +122,7 @@ iterm2: brew ## Install and configure iTerm2, install JetBrainsMono font
 
 
 hammerspoon: brew ## Install Hammmerspoon and Spoons
-	is-macos || exit 1
+	@is-macos || (printf "$(call colorize,$(ERROR_COLOR),Not macOS)\n";  exit 1;)
 	is-installed hammerspoon || brew install hammerspoon
 	bash <(curl -s https://raw.githubusercontent.com/dbalatero/VimMode.spoon/master/bin/installer)
 	@$(call create_symlink,$(DOTFILES_DIR)/misc/.hammerspoon/init.lua,$(HOME)/.hammerspoon/init.lua)
