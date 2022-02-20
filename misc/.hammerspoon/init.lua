@@ -45,15 +45,51 @@ vim:bindHotKeys({ enter = { {'ctrl'}, ';' } })
 
 -- Window Management {{{
 -- Based on https://github.com/ztomer/.hammerspoon/blob/master/init.lua
+-- and https://github.com/S1ngS1ng/HammerSpoon/blob/master/window-management.lua
 
 -- init grid
-hs.grid.MARGINX     = 0
-hs.grid.MARGINY     = 0
-hs.grid.GRIDWIDTH   = 7
-hs.grid.GRIDHEIGHT  = 3
-
--- disable animation
 hs.window.animationDuration = 0
+hs.hints.style = "vimperator"
+hs.grid.setMargins('5, 5')
+
+screens = {}
+screenArr = {}
+local screenwatcher = hs.screen.watcher.new(function()
+  screens = hs.screen.allScreens()
+end)
+screenwatcher:start()
+
+-- construct list of screens
+indexDiff = 0
+for index=1,#hs.screen.allScreens() do
+  local xIndex,yIndex = hs.screen.allScreens()[index]:position()
+  screenArr[xIndex] = hs.screen.allScreens()[index]
+end
+
+-- find lowest screen index, save to indexDiff if negative
+hs.fnutils.each(screenArr, function(e)
+  local currentIndex = hs.fnutils.indexOf(screenArr, e)
+  if currentIndex < 0 and currentIndex < indexDiff then
+    indexDiff = currentIndex
+  end
+end)
+
+-- set screen grid depending on resolution
+for _index,screen in pairs(hs.screen.allScreens()) do
+  if screen:frame().w / screen:frame().h > 2 then
+    -- 6 * 2 for ultra wide screen
+    hs.grid.setGrid('6 * 2', screen)
+  else
+    if screen:frame().w < screen:frame().h then
+      -- 2 * 3 for vertically aligned screen
+      hs.grid.setGrid('2 * 3', screen)
+    else
+      -- 2 * 2 for normal screen
+      hs.grid.setGrid('2 * 2', screen)
+    end
+  end
+end
+
 
 -- hotkey mash
 local mash           = {"cmd"}
@@ -71,7 +107,7 @@ local function auto_tile(appName, event)
     end
 end
 
--- Moves all windows outside the view into the curent view
+-- moves all windows outside the view into the curent view
 local function rescue_windows()
     local screen = hs.screen.mainScreen()
     local screenFrame = screen:fullFrame()
@@ -104,8 +140,8 @@ local function init_wm_binding()
     hs.hotkey.bind(mash_secondary, 'M', hs.grid.maximizeWindow)
 
     -- multi monitor
-    hs.hotkey.bind(mash_secondary, 'N', hs.grid.pushWindowNextScreen)
-    hs.hotkey.bind(mash_secondary, 'P', hs.grid.pushWindowPrevScreen)
+    hs.hotkey.bind(mash_secondary, 'N', function() hs.window.focusedWindow():moveOneScreenEast(true) end)
+    hs.hotkey.bind(mash_secondary, 'P', function() hs.window.focusedWindow():moveOneScreenWest(true) end)
 
     -- move windows
     hs.hotkey.bind(mash_secondary, 'H', hs.grid.pushWindowLeft)
@@ -120,17 +156,14 @@ local function init_wm_binding()
     hs.hotkey.bind(mash_secondary, 'I', hs.grid.resizeWindowShorter)
     hs.hotkey.bind(mash_secondary, 'O', hs.grid.resizeWindowWider)
 
-    -- Window Hints
-    -- hs.hotkey.bind(mash_secondary, '.', function() hs.hints.windowHints(hs.window.allWindows()) end)
+    -- window hints
     hs.hotkey.bind(mash, '.', hs.hints.windowHints)
+    hs.hotkey.bind(mash_secondary, '.', hs.grid.toggleShow)
 end
 
 init_wm_binding()
--- hs.application.watcher.new(auto_tile):start()
 
--- appNameWatch = hs.application.watcher.new(function(appName, eventType, app)
-    -- hs.alert.show(hs.application.frontmostApplication():name())
--- end):start()
+-- hs.application.watcher.new(auto_tile):start()
 
 -- }}}
 
