@@ -121,11 +121,10 @@ iterm2: brew ## Install and configure iTerm2, install JetBrainsMono font
 	open -a "iTerm"
 
 
-hammerspoon: brew ## Install Hammmerspoon and Spoons
+hammerspoon: brew link ## Install Hammmerspoon and Spoons
 	@is-macos || (printf "$(call colorize,$(ERROR_COLOR),Not macOS)\n";  exit 1;)
 	is-installed hammerspoon || brew install hammerspoon
 	bash <(curl -s https://raw.githubusercontent.com/dbalatero/VimMode.spoon/master/bin/installer)
-	@$(call create_symlink,$(DOTFILES_DIR)/misc/.hammerspoon/init.lua,$(HOME)/.hammerspoon/init.lua)
 
 
 haskell: ## Install Haskell Platform and Stack
