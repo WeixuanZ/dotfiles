@@ -73,14 +73,14 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
 
-plugins=(zsh-vi-mode z zsh-autosuggestions sublime macos git colored-man-pages autoswitch_virtualenv docker docker-compose zsh-syntax-highlighting)
+plugins=(fzf-tab zsh-vi-mode z zsh-autosuggestions sublime macos git colored-man-pages autoswitch_virtualenv docker docker-compose zsh-syntax-highlighting)
 
 
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 # zsh-vi-mode will overwrite key bindings, so add them after the plugin init
 function zvm_after_init() {
     [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-    bindkey '^ ' autosuggest-accept
+    bindkey '^n' autosuggest-accept
 }
 
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=6'
@@ -102,6 +102,12 @@ pastefinish() {
 }
 zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
+
+# fzf-tab
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
+    fzf-preview 'echo ${(P)word}'
+zstyle ':fzf-tab:complete:(\\|*/|)man:*' fzf-preview 'man $word'
 
 # Remove autosuggestion after pasting
 # https://github.com/zsh-users/zsh-autosuggestions/issues/351
@@ -134,9 +140,6 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 
 [ -f "${GHCUP_INSTALL_BASE_PREFIX:=$HOME}/.ghcup/env" ] && source "${GHCUP_INSTALL_BASE_PREFIX:=$HOME}/.ghcup/env"
 
-# Heroku autocomplete setup
-HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
-
 # Ruby
 export PATH="/usr/local/opt/ruby/bin:$PATH"
 
@@ -151,6 +154,9 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools
 export PATH="$PATH:/Applications/TikZiT.app/Contents/MacOS"
 
 eval $(thefuck --alias)
+
+# Heroku autocomplete setup
+HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
 
 # Google Cloud SDK autocomplete
 source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"

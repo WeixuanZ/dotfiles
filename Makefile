@@ -65,7 +65,7 @@ apps: brew ## Install all casks and mas apps listed in install/Appfile
 	[ -d "$(QUICKLOOK_LIB_DIR)" ] && xattr -d -r com.apple.quarantine $(QUICKLOOK_LIB_DIR)
 
 
-ZSH_PLUGINS = jeffreytse/zsh-vi-mode MichaelAquilina/zsh-autoswitch-virtualenv zsh-users/zsh-autosuggestions zsh-users/zsh-syntax-highlighting
+ZSH_PLUGINS = jeffreytse/zsh-vi-mode MichaelAquilina/zsh-autoswitch-virtualenv zsh-users/zsh-autosuggestions zsh-users/zsh-syntax-highlighting Aloxaf/fzf-tab
 ZSH_THEMES = denysdovhan/spaceship-prompt
 ZSH_CUSTOM_DIR = $(HOME)/.oh-my-zsh/custom
 clone = $(foreach plugin,$(1),printf "$(call colorize,$(COM_COLOR),Cloning $(plugin))\n"; git clone --depth=1 --quiet https://github.com/$(plugin) $(2)/$(notdir $(plugin));)
@@ -97,8 +97,10 @@ vim: brew ## Install VimPlug and plugins in .vimrc, which is also symlinked into
 	curl -fLso $(HOME)/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 	vim +PlugInstall +qall
 	# link other *.vim files
-	@for file in $$(find $(DOTFILES_DIR)/vim/plugged -name '*.vim'); do \
-		$(call create_symlink,$$file,$(HOME)/.vim/$${file#"$(DOTFILES_DIR)/vim/"}); \
+	@for file in $$(git ls-files | egrep '^vim\/\w+\/.+$$'); do \
+		filename=$${file#*vim/}; \
+		mkdir -p $(HOME)/.vim/$${filename%/*}; \
+		$(call create_symlink,$(DOTFILES_DIR)/$$file,$(HOME)/.vim/$$filename); \
 	done
 
 VIM_YCM_DIR = $(HOME)/.vim/plugged/youcompleteme

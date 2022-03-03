@@ -5,6 +5,7 @@ call plug#begin(has('ivim') ? '~/ivim' : '~/.vim/plugged')
 " ====================================================================
 Plug 'valloric/youcompleteme'
     set completeopt-=preview
+    let g:ycm_min_num_of_chars_for_completion = 4  " ycm conflicts with UltiSnips auto snippet
     let g:ycm_autoclose_preview_window_after_completion = 1
     let g:ycm_show_diagnostics_ui = 0 " use ALE for linting
     " trigger for everything, maybe not a good idea though, we will see about speed...
@@ -15,7 +16,6 @@ Plug 'sirver/ultisnips'
     let g:UltiSnipsExpandTrigger = '<C-j>'
     let g:UltiSnipsJumpForwardTrigger = '<C-j>'
     let g:UltiSnipsJumpBackwardTrigger = '<C-k>'
-Plug 'honza/vim-snippets'
 " }}}
 
 " File Navigation {{{
@@ -414,7 +414,8 @@ onoremap in{ :<c-u>normal! f{vi{<cr>
 onoremap il{ :<c-u>normal! F}vi{<cr>
 onoremap ia{ :<c-u>normal! f{va{<cr>
 
-nnoremap <leader>C :edit ~/.vimrc<CR>
+nnoremap <leader>CC :edit ~/.vimrc<CR>
+nnoremap <leader>C :cd %:p:h<CR>
 
 nnoremap Y y$
 vmap y ygv<Esc>
