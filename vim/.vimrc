@@ -192,7 +192,7 @@ Plug 'lervag/vimtex'
     let g:vimtex_format_enabled = 1
     let g:vimtex_fold_enabled = 1
     let g:vimtex_fold_manual = 1
-    " let g:vimtex_quickfix_mode = 1
+    let g:vimtex_quickfix_open_on_warning = 0
     let g:vimtex_quickfix_autoclose_after_keystrokes = 5
     augroup tex
         autocmd!
@@ -213,7 +213,7 @@ Plug 'lervag/vimtex'
         nnoremap <buffer><leader>v :VimtexView<CR>
         nnoremap <buffer><leader>Z :VimtexRefreshFolds<CR>
         " The second argument extends the default vimtex#fzf#run options
-        nnoremap <buffer><leader>lt :call vimtex#fzf#run('ctli', { 'left': '20%' })<CR>
+        " nnoremap <buffer><leader>lt :call vimtex#fzf#run('ctli', { 'left': '20%' })<CR>
     endfunction " }}}
     function TexQuit() " {{{
         call vimtex#compiler#clean(0)
@@ -289,7 +289,6 @@ call plug#end()
 
 " General Config {{{
 " ===================================================================
-set nocompatible
 set encoding=utf-8
 set conceallevel=0
 set mouse=a
@@ -322,6 +321,7 @@ set signcolumn=yes
 set foldmethod=marker
 set foldlevel=2
 set noshowmode                        " Don't show editing mode
+set maxmempattern=10000
 
 " Formatting
 set expandtab tabstop=4 softtabstop=4 " Four spaces for tabs everywhere

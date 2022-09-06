@@ -37,6 +37,7 @@ $0
 endsnippet
 
 priority 100
+context "math()"
 snippet ... "ldots" iA
 \ldots
 endsnippet
@@ -44,11 +45,11 @@ endsnippet
 snippet table "Table environment" b
 \begin{table}[${1:htpb}]
 	\centering
-	\caption{${2:caption}}
-	\label{tab:${3:label}}
-	\begin{tabular}{${5:c}}
-	$0${5/((?<=.)c|l|r)|./(?1: & )/g}
+	\begin{tabular}{${2:c}}
+	$0${2/((?<=.)c|l|r)|./(?1: & )/g}
 	\end{tabular}
+	\caption{${3:caption}}
+	\label{tab:${4:${3/\W+/-/g}}}
 \end{table}
 endsnippet
 
@@ -83,10 +84,12 @@ snippet pac "Package" b
 \usepackage[${1:options}]{${2:package}}$0
 endsnippet
 
+context "math()"
 snippet => "implies" Ai
 \implies
 endsnippet
 
+context "math()"
 snippet =< "implied by" Ai
 \impliedby
 endsnippet
@@ -119,37 +122,33 @@ endsnippet
 
 
 context "math()"
-snippet // "Fraction" iA
+snippet / "Fraction" i
 \\frac{$1}{$2}$0
 endsnippet
 
-snippet / "Fraction" i
-\\frac{${VISUAL}}{$1}$0
-endsnippet
-
 context "math()"
-snippet '((\d+)|(\d*)(\\)?([A-Za-z]+)((\^|_)(\{\d+\}|\d))*)/' "symbol frac" wrA
+snippet '(((\d*)([A-Za-z]?)(\\)?([A-Za-z]+)((\^|_)(\{.+\}|(\d|[A-Za-z])))*)|(\d+))//' "symbol frac" wrA
 \\frac{`!p snip.rv = match.group(1)`}{$1}$0
 endsnippet
 
 priority 1000
 context "math()"
-snippet '^.*\)/' "() frac" wrA
+snippet '^.*\)//' "() frac" wrA
 `!p
 stripped = match.string[:-1]
 depth = 0
-i = len(stripped) - 1
+i = len(stripped) - 2
 while True:
 	if stripped[i] == ')': depth += 1
 	if stripped[i] == '(': depth -= 1
 	if depth == 0: break;
 	i-=1
-snip.rv = stripped[0:i] + "\\frac{" + stripped[i+1:-1] + "}"
+snip.rv = stripped[0:i] + "\\frac{" + stripped[i+1:-2] + "}"
 `{$1}$0
 endsnippet
 
 context "math()"
-snippet '([A-Za-z])(\d)' "auto subscript" wrA
+snippet '([A-Za-z])(\d)' "auto subscript" wr
 `!p snip.rv = match.group(1)`_`!p snip.rv = match.group(2)`
 endsnippet
 
@@ -199,19 +198,21 @@ snippet != "equals" iA
 endsnippet
 
 context "math()"
-snippet ceil "ceil" iA
+snippet ceil "ceil" i
 \left\lceil $1 \right\rceil $0
 endsnippet
 
 context "math()"
-snippet floor "floor" iA
+snippet floor "floor" i
 \left\lfloor $1 \right\rfloor$0
 endsnippet
 
+context "math()"
 snippet pmat "pmat" iA
 \begin{pmatrix} $1 \end{pmatrix} $0
 endsnippet
 
+context "math()"
 snippet bmat "bmat" iA
 \begin{bmatrix} $1 \end{bmatrix} $0
 endsnippet
@@ -237,6 +238,7 @@ snippet prod "product" w
 \prod_{${1:n=${2:1}}}^{${3:\infty}} ${4:${VISUAL}} $0
 endsnippet
 
+context "math()"
 snippet part "d/dx" w
 \frac{\partial ${1:V}}{\partial ${2:x}} $0
 endsnippet
@@ -246,10 +248,17 @@ snippet sq "\sqrt{}" iA
 \sqrt{${1:${VISUAL}}} $0
 endsnippet
 
+context "math()"
 snippet __ "subscript" iA
 _{$1}$0
 endsnippet
 
+context "math()"
+snippet ^^ "superscript" iA
+^{$1}$0
+endsnippet
+
+context "math()"
 snippet ooo "\infty" iA
 \infty
 endsnippet
@@ -258,10 +267,12 @@ snippet rij "mrij" i
 (${1:x}_${2:n})_{${3:$2}\\in${4:\\N}}$0
 endsnippet
 
+context "math()"
 snippet <= "leq" iA
 \le
 endsnippet
 
+context "math()"
 snippet >= "geq" iA
 \ge
 endsnippet
@@ -348,6 +359,12 @@ snippet mcal "mathcal" iA
 \mathcal{$1}$0
 endsnippet
 
+context "math()"
+snippet mbb "mathbb" iA
+\mathbb{$1}$0
+endsnippet
+
+context "math()"
 snippet lll "l" iA
 \ell
 endsnippet
@@ -368,8 +385,8 @@ snippet ** "cdot" iA
 endsnippet
 
 context "math()"
-snippet norm "norm" iA
-\|$1\|$0
+snippet '(?<!\\)(norm)' "norm" riA
+\left\Vert$1\right\Vert$0
 endsnippet
 
 priority 100
@@ -386,7 +403,7 @@ endsnippet
 
 priority 200
 context "math()"
-snippet '(?<!\\)(arcsin|arccos|arctan|arccot|arccsc|arcsec|pi|zeta|int)' "ln" rwA
+snippet '(?<!\\)(arcsin|arccos|arctan|arccot|arccsc|arcsec|pi|lambda|zeta|int)' "ln" rwA
 \\`!p snip.rv = match.group(1)`
 endsnippet
 
@@ -438,7 +455,7 @@ endsnippet
 
 context "math()"
 snippet set "set" wA
-\\{$1\\} $0
+\\{$1\\}$0
 endsnippet
 
 snippet || "mid" iA
@@ -451,7 +468,7 @@ snippet cc "subset" Ai
 \subset
 endsnippet
 
-snippet notin "not in " iA
+snippet notin "not in " i
 \not\in
 endsnippet
 
@@ -511,7 +528,7 @@ _\text{$1} $0
 endsnippet
 
 context "math()"
-snippet tt "text" iA
+snippet tt "text" wA
 \text{$1}$0
 endsnippet
 
@@ -522,7 +539,7 @@ snippet case "cases" wA
 \end{cases}
 endsnippet
 
-snippet SI "SI" iA
+snippet SI "SI" A
 \SI{$1}{$2}
 endsnippet
 
@@ -533,25 +550,33 @@ snippet bigfun "Big function" iA
 .\end{align*}
 endsnippet
 
+context "math()"
+snippet '(?<!\\)(vec)' "vec" riA
+\vec{$1}$0
+endsnippet
+
 snippet cvec "column vector" iA
 \begin{pmatrix} ${1:x}_${2:1}\\\\ \vdots\\\\ $1_${2:n} \end{pmatrix}
 endsnippet
 
-priority 10
 context "math()"
-snippet "bar" "bar" riA
+snippet bar "bar" A
 \overline{$1}$0
 endsnippet
 
-priority 100
 context "math()"
-snippet "([a-zA-Z])bar" "bar" riA
+snippet "([a-zA-Z])bar" "bar" ri
 \overline{`!p snip.rv=match.group(1)`}
+endsnippet
+
+context "math()"
+snippet wtil "widetilde" iA
+\widetilde{$1}$0
 endsnippet
 
 priority 10
 context "math()"
-snippet "hat" "hat" riA
+snippet hat "hat" iA
 \hat{$1}$0
 endsnippet
 
@@ -559,14 +584,6 @@ priority 100
 context "math()"
 snippet "([a-zA-Z])hat" "hat" riA
 \hat{`!p snip.rv=match.group(1)`}
-endsnippet
-
-snippet HH "H" iA
-\mathbb{H}
-endsnippet
-
-snippet DD "D" iA
-\mathbb{D}
 endsnippet
 
 # vim:ft=snippets

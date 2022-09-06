@@ -42,6 +42,10 @@ update-brewfile: brew ## Update install/Brewfile and install/Appfile with packag
 	@echo '# vim: syntax=brewfile' >> $(DOTFILES_DIR)/install/Appfile
 	rm $(DOTFILES_DIR)/Brewfile
 
+update-installfile: brew ## Update install/Pythonfile
+	is-brew-package python3 || brew install python3
+	pip3 freeze | cut -d"=" -f1 > $(DOTFILES_DIR)/install/Pythonfile
+
 
 packages: brew-packages python-packages node-packages ## Install Homebrew, Python and Node packages
 

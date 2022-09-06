@@ -12,9 +12,11 @@ cask "blackhole-16ch"
 cask "boop"
 cask "cryptomator"
 cask "cyberduck"
+cask "free-gpgmail"
 cask "gcc-arm-embedded"
 cask "ghdl-llvm"
 cask "google-cloud-sdk"
+cask "gpg-suite-no-mail"
 cask "gswitch"
 cask "hammerspoon"
 cask "hex-fiend"
@@ -26,6 +28,7 @@ cask "kap"
 cask "karabiner-elements"
 cask "keka"
 cask "knockknock"
+cask "logseq"
 cask "ltspice"
 cask "lulu"
 cask "mactex"
@@ -49,12 +52,12 @@ cask "syncalicious"
 cask "thunderbird"
 cask "tikzit"
 cask "vnc-viewer"
+mas "AdGuard for Safari", id: 1440147259
 mas "circuitlatex", id: 1200311322
 mas "DaVinci Resolve", id: 571213070
 mas "Disk Speed Test", id: 425264550
 mas "GarageBand", id: 682658836
 mas "GeoGebra Geometry", id: 1294020062
-mas "iMovie", id: 408981434
 mas "Ka-Block!", id: 1335413823
 mas "Keynote", id: 409183694
 mas "Klib", id: 1196268448

@@ -1,5 +1,8 @@
 source ~/.vimrc
 
+set scrolloff=0
+set sidescrolloff=0
+
 nnoremap <leader>C :edit ~/.ideavimrc<cr>
 set relativenumber
 
