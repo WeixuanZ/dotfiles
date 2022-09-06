@@ -1,0 +1,94 @@
+[core]
+    editor = vim
+    excludesfile = "~/.gitignore"
+
+[init]
+    defaultBranch = master
+
+[commit]
+    gpgsign = true
+
+[pull]
+    rebase = false
+
+[fetch]
+    prune = true
+
+[diff]
+    tool = vimdiff
+
+[merge]
+    tool = vimdiff
+
+[alias]
+    ls = ls-files
+    # Show files ignored by git
+    ign = ls-files -o -i --exclude-standard
+    fl = log -u
+    last = log -1 HEAD --stat
+    ra = remote add origin
+    refs = show-ref
+    pushf = push --force-with-lease
+    undo = reset HEAD~1 --mixed
+    # Count the number of commits
+    count = rev-list --count HEAD
+    # Set commit timeestamp to author timestamp, useful after history rewrite
+    reset-date = !"f() { git rebase --committer-date-is-author-date HEAD~\"$1\"; }; f"
+    # Change the given email to the current one configured with git
+    update-author = !"f () { git filter-repo --email-callback \"return email if email != b\\\"$1\\\" else b\\\"$(git config user.email)\\\"\"; }; f"
+    # Add GitHub co-author to the most recent commit
+    credit = "!f() { git stash; git commit --amend -m \"$(git log --format=%B -n1)\" -m \"Co-authored-by: $1 <$2>\"; git stash pop;}; f"
+    # List all global configurations
+    gl = config --global -l
+
+    # By StackOverflow user Thomas https://stackoverflow.com/a/48697231
+    alias = !git config --get-regexp ^alias\\. | sed -e s/^alias.// -e s/\\ /\\ $(printf \"\\043\")--\\>\\ / | column -t -s $(printf \"\\043\") | sort -k 1
+
+    # All aliases below MIT (c) Jess Frazelle https://github.com/jessfraz/dotfiles/blob/master/.gitconfig
+
+    # View abbreviated SHA, description, and history graph of the latest 20 commits
+    l = log --pretty=oneline -n 20 --graph --abbrev-commit
+    # View the current working tree status using the short format
+    s = status -s
+    # Show the diff between the latest commit and the current state
+    d = !"git diff-index --quiet HEAD -- || clear; git --no-pager diff --patch-with-stat"
+    # `git di $number` shows the diff between the state `$number` revisions ago and the current state
+    di = !"d() { git diff --patch-with-stat HEAD~$1; }; git diff-index --quiet HEAD -- || clear; d"
+    # Pull in remote changes for the current repository and all its submodules
+    p = !"git pull; git submodule foreach git pull origin master"
+    # Clone a repository including all submodules
+    c = clone --recursive
+    # Switch to a branch, creating it if necessary
+    go = "!f() { git checkout -b \"$1\" 2> /dev/null || git checkout \"$1\"; }; f"
+    # Color graph log view
+    graph = log --graph --color --pretty=format:"%C(yellow)%H%C(green)%d%C(reset)%n%x20%cd%n%x20%cn%x20(%ce)%n%x20%s%n"
+    # Show verbose output about tags, branches or remotes
+    tags = tag -l
+    branches = branch -a
+    remotes = remote -v
+    # Amend the currently staged files to the latest commit
+    amend = commit --amend --reuse-message=HEAD
+    # Credit an author on the latest commit
+    amend-author = "!f() { git commit --amend --author \"$1 <$2>\" -C HEAD; }; f"
+    # Interactive rebase with the given number of latest commits
+    reb = "!r() { git rebase -i HEAD~$1; }; r"
+    # Find branches containing commit
+    fb = "!f() { git branch -a --contains $1; }; f"
+    # Find tags containing commit
+    ft = "!f() { git describe --always --contains $1; }; f"
+    # Find commits by source code
+    fc = "!f() { git log --pretty=format:'%C(yellow)%h  %Cblue%ad  %Creset%s%Cgreen  [%cn] %Cred%d' --decorate --date=short -S$1; }; f"
+    # Find commits by commit message
+    fm = "!f() { git log --pretty=format:'%C(yellow)%h  %Cblue%ad  %Creset%s%Cgreen  [%cn] %Cred%d' --decorate --date=short --grep=$1; }; f"
+
+[url "git@github.com:"]
+    pushInsteadOf = "https://github.com/"
+    pushInsteadOf = "github:"
+    pushInsteadOf = "git://github.com/"
+
+[filter "lfs"]
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true
+
