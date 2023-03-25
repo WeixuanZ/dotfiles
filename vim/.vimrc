@@ -183,8 +183,25 @@ Plug 'sheerun/vim-polyglot'
     let g:vim_markdown_math = 1
     let g:vim_markdown_frontmatter = 1
     let g:vim_markdown_edit_url_in = 'current'
+    augroup markdown
+        autocmd!
+        autocmd FileType markdown call MarkdownConfig()
+    augroup END
+    function MarkdownConfig()
+        setlocal wrap
+        setlocal linebreak
+        setlocal showbreak=↪
+        vmap <buffer>j gj
+        vmap <buffer>k gk
+        nmap <buffer>j gj
+        nmap <buffer>k gk
+        nnoremap <buffer><leader>lt :Toc<CR>
+        nnoremap <buffer><leader>v :MarkdownPreview<CR>
+    endfunction
     " SQL
     let g:sql_type_default = 'pgsql'
+Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install'  }
+    let g:mkdp_echo_preview_url = 1
 Plug 'lervag/vimtex'
     let g:tex_flavor = 'latex'
     let g:vimtex_view_method = 'skim'
@@ -223,7 +240,6 @@ Plug 'lervag/vimtex'
         let g:vimtex_compiler_progname = 'nvr'
     endif
 Plug 'ap/vim-css-color'
-Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install'  }
 Plug 'goerz/jupytext.vim'
 " }}}
 
@@ -620,3 +636,4 @@ augroup END
 " * https://vim.fandom.com/wiki/
 " }}}
 
+" vim: set foldlevel=1:
