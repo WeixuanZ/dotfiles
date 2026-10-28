@@ -28,25 +28,36 @@ depends = ["brew"]
 run = "bash scripts/tasks.sh update-brewfile"
 
 [tasks.update-installfile]
-description = "Rewrite install/Pythonfile from pip freeze"
-depends = ["brew"]
+description = "Show uv tools. Edit install/uv-tools.txt by hand"
 run = "bash scripts/tasks.sh update-installfile"
+
+[tasks.tools]
+description = "Install language toolchains and dev CLIs with mise and uv"
+run = "bash scripts/tasks.sh tools"
 
 [tasks.brew-packages]
 description = "Install Homebrew packages from install/Brewfile"
 run = "bash scripts/tasks.sh brew-packages"
 
 [tasks.python-packages]
-description = "Install Python packages from install/Pythonfile"
-run = "bash scripts/tasks.sh python-packages"
+description = "Install Python dev CLIs with uv (not a global pip freeze)"
+depends = ["tools"]
+run = "true"
 
 [tasks.node-packages]
-description = "Install Node packages from install/Nodefile"
-run = "bash scripts/tasks.sh node-packages"
+description = "Install Node dev CLIs with mise (not npm install -g)"
+depends = ["tools"]
+run = "true"
+
+[tasks.init]
+description = "Install dev toolchains, uv tools, and Homebrew packages"
+alias = "install"
+depends = ["tools", "brew-packages"]
+run = "true"
 
 [tasks.packages]
-description = "Install Homebrew, Python, and Node packages"
-depends = ["brew-packages", "python-packages", "node-packages"]
+description = "Same as init"
+depends = ["init"]
 run = "true"
 
 [tasks.apps]
@@ -74,7 +85,7 @@ description = "Install Hammerspoon and Spoons (macOS)"
 run = "bash scripts/tasks.sh hammerspoon"
 
 [tasks.haskell]
-description = "Install GHCup and Stack"
+description = "Install GHCup's recommended GHC, Cabal, Stack, and HLS"
 run = "bash scripts/tasks.sh haskell"
 
 [tasks.tmux]

@@ -1,7 +1,59 @@
 #!/usr/bin/env bash
 # mise task bodies. Invoked as `scripts/tasks.sh <task>`.
 set -euo pipefail
-source "$(dirname "$0")/lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
+install_uv_tools() {
+  local file="$DOTFILES_DIR/install/uv-tools.txt"
+  local line
+  [[ -f "$file" ]] || die "missing $file"
+  command -v uv >/dev/null 2>&1 || die "uv is not on PATH. Run: mise run init"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%%#*}"
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -z "$line" ]] && continue
+    info "uv tool install $line"
+    # The line is a package name plus optional `uv tool install` arguments.
+    # shellcheck disable=SC2086
+    uv tool install $line
+  done <"$file"
+}
+
+# Language runtimes and the CLIs that replaced brew's abandoned formulae.
+# Installed into the global mise config so a new shell can see them, not only
+# this task. Python CLIs are uv tools (isolated). JS CLIs are mise npm tools,
+# not `npm install -g`.
+DEV_TOOLS=(
+  node@lts
+  python@3.14
+  go@1
+  java@lts
+  uv@latest
+  eza@latest
+  yt-dlp@latest
+  aqua:iffse/pay-respects@latest
+  npm:typescript@latest
+  npm:prettier@latest
+  npm:eslint@latest
+)
+
+task_tools() {
+  info "Installing dev tools into ~/.config/mise/config.toml"
+  MISE_YES=1 mise use -g "${DEV_TOOLS[@]}"
+  hash -r || true
+  # This process started before those shims existed.
+  eval "$(mise activate bash)"
+  if command -v corepack >/dev/null 2>&1; then
+    corepack enable || warn "corepack enable failed"
+    corepack prepare pnpm@latest --activate || warn "could not activate pnpm via corepack"
+    corepack prepare yarn@stable --activate || warn "could not activate yarn via corepack"
+  else
+    warn "corepack is not on this node; pnpm and yarn were not activated"
+  fi
+  install_uv_tools
+  ok "dev tools ready: node $(node --version), python $(python --version)"
+}
 
 task_link() {
   local file rel top dest
@@ -39,36 +91,47 @@ task_brew() {
 
 task_update_brewfile() {
   task_brew
-  (cd "$DOTFILES_DIR" && brew bundle dump --force)
-  grep -E '^(tap|brew)[[:space:]]' "$DOTFILES_DIR/Brewfile" > "$DOTFILES_DIR/install/Brewfile"
-  grep -E '^(tap|cask|mas)[[:space:]]' "$DOTFILES_DIR/Brewfile" > "$DOTFILES_DIR/install/Appfile"
-  echo '# vim: syntax=brewfile' >> "$DOTFILES_DIR/install/Appfile"
-  rm "$DOTFILES_DIR/Brewfile"
+  local dump raw_brew raw_app
+  dump="$(mktemp)"
+  raw_brew="$(mktemp)"
+  raw_app="$(mktemp)"
+  (cd "$DOTFILES_DIR" && brew bundle dump --force --file "$dump")
+  grep -E '^(tap|brew)[[:space:]]' "$dump" >"$raw_brew" || true
+  grep -E '^(tap|cask|mas)[[:space:]]' "$dump" >"$raw_app" || true
+  modernize_brewfile "$raw_brew" "$DOTFILES_DIR/install/Brewfile"
+  modernize_brewfile "$raw_app" "$DOTFILES_DIR/install/Appfile"
+  echo '# vim: syntax=brewfile' >>"$DOTFILES_DIR/install/Appfile"
+  rm -f "$dump" "$raw_brew" "$raw_app"
 }
 
 task_update_installfile() {
-  task_brew
-  is-brew-package python3 || brew install python3
-  pip3 freeze | cut -d "=" -f 1 > "$DOTFILES_DIR/install/Pythonfile"
+  command -v uv >/dev/null 2>&1 || die "uv is not on PATH. Run: mise run init"
+  info "Installed uv tools (edit install/uv-tools.txt by hand; a dump would drop --with flags):"
+  uv tool list
 }
 
 task_brew_packages() {
   task_brew
-  brew bundle --file "$DOTFILES_DIR/install/Brewfile"
+  local filtered
+  filtered="$(mktemp)"
+  modernize_brewfile "$DOTFILES_DIR/install/Brewfile" "$filtered"
+  brew bundle --file "$filtered"
+  rm -f "$filtered"
 }
 
 task_python_packages() {
-  task_brew
-  is-brew-package python3 || brew install python3
-  pip3 install -r "$DOTFILES_DIR/install/Pythonfile"
+  # Kept as a name. The global pip freeze in install/Pythonfile is not installed.
+  task_tools
 }
 
 task_node_packages() {
-  task_brew
-  is-brew-package node || brew install node
-  # Nodefile is a whitespace-separated list of global packages.
-  # shellcheck disable=SC2046
-  npm install -g $(cat "$DOTFILES_DIR/install/Nodefile")
+  # Kept as a name. install/Nodefile is not passed to npm install -g.
+  task_tools
+}
+
+task_packages() {
+  task_tools
+  task_brew_packages
 }
 
 task_apps() {
@@ -76,7 +139,11 @@ task_apps() {
   task_brew
   local quicklook="$HOME/Library/QuickLook"
   is-brew-package mas || brew install mas
-  brew bundle --file "$DOTFILES_DIR/install/Appfile"
+  local filtered
+  filtered="$(mktemp)"
+  modernize_brewfile "$DOTFILES_DIR/install/Appfile" "$filtered"
+  brew bundle --file "$filtered"
+  rm -f "$filtered"
   if [[ -d "$quicklook" ]]; then
     xattr -d -r com.apple.quarantine "$quicklook" || true
   fi
@@ -177,8 +244,32 @@ task_hammerspoon() {
 }
 
 task_haskell() {
-  is-executable ghc || curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
-  is-executable stack || curl -sSL https://get.haskellstack.org/ | sh
+  # One GHCup bootstrap. Stack's old standalone installer is not used; Stack
+  # and HLS come from GHCup.
+  if ! is-executable ghcup && [[ ! -x "$HOME/.ghcup/bin/ghcup" ]]; then
+    curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org \
+      | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 \
+        BOOTSTRAP_HASKELL_GHC_VERSION=recommended \
+        BOOTSTRAP_HASKELL_CABAL_VERSION=recommended \
+        BOOTSTRAP_HASKELL_INSTALL_STACK=1 \
+        BOOTSTRAP_HASKELL_INSTALL_HLS=1 \
+        BOOTSTRAP_HASKELL_ADJUST_BASHRC=1 \
+        sh
+  fi
+  if [[ -f "$HOME/.ghcup/env" ]]; then
+    # shellcheck disable=SC1091
+    source "$HOME/.ghcup/env"
+  fi
+  is-executable ghcup || die "ghcup is not on PATH after bootstrap"
+  ghcup install ghc recommended
+  ghcup set ghc recommended
+  ghcup install cabal recommended
+  ghcup set cabal recommended
+  ghcup install stack recommended
+  ghcup set stack recommended
+  ghcup install hls recommended
+  ghcup set hls recommended
+  ok "GHC, Cabal, Stack, and HLS installed with GHCup"
 }
 
 task_tmux() {
@@ -258,7 +349,7 @@ task_pi() {
     if command -v npm >/dev/null 2>&1; then
       npm install -g @earendil-works/pi-coding-agent
     else
-      die "pi is not installed and npm is not on PATH. Install Node, then re-run."
+      die "pi is not installed and npm is not on PATH. Run: mise run init"
     fi
   fi
   # settings.json already declares the packages. This downloads them.
@@ -299,7 +390,7 @@ main() {
     brew-packages) task_brew_packages ;;
     python-packages) task_python_packages ;;
     node-packages) task_node_packages ;;
-    packages) task_brew_packages; task_python_packages; task_node_packages ;;
+    packages|init|install) task_packages ;;
     apps) task_apps ;;
     zsh) task_zsh ;;
     vim) task_vim ;;
@@ -316,4 +407,6 @@ main() {
   esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

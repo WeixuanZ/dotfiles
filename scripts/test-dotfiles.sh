@@ -42,8 +42,11 @@ def load_toml(path):
 
 mise = load_toml(root / "mise.toml")
 tasks = mise["tasks"]
-for name in ("link", "tmux", "alacritty", "herdr", "pi", "linux", "test"):
+for name in ("link", "tmux", "alacritty", "herdr", "pi", "linux", "test", "init", "tools"):
     assert name in tasks, name
+assert tasks["init"].get("alias") == "install"
+assert tasks["init"]["depends"] == ["tools", "brew-packages"]
+assert "pip freeze" not in tasks["update-installfile"]["description"]
 
 herdr = load_toml(root / "misc/.config/herdr/config.toml")
 assert herdr["keys"]["prefix"] == "ctrl+space"
@@ -272,10 +275,16 @@ else
     fail=1
   fi
 fi
-if grep -q 'command -v thefuck' "$ROOT/zsh/.zshrc"; then
+if grep -q 'command -v thefuck' "$ROOT/zsh/.zshrc" && grep -q 'pay-respects zsh --alias fuck' "$ROOT/zsh/.zshrc"; then
   printf 'ok   zshrc guards thefuck\n'
 else
   printf 'FAIL zshrc thefuck\n' >&2
+  fail=1
+fi
+if grep -q 'command eza' "$ROOT/zsh/.zshrc" && grep -q 'command exa' "$ROOT/zsh/.zshrc"; then
+  printf 'ok   zshrc eza fallback\n'
+else
+  printf 'FAIL zshrc eza fallback\n' >&2
   fail=1
 fi
 if grep -q 'darwin' "$ROOT/zsh/.zshrc" && grep -q 'plugins+=(macos sublime)' "$ROOT/zsh/.zshrc"; then
@@ -292,6 +301,111 @@ if grep -n '/etc/shell' "$ROOT/scripts/tasks.sh" | grep -v '/etc/shells' | grep 
 else
   printf 'ok   /etc/shells spelling\n'
 fi
+
+# Dev-tool install no longer uses a global pip freeze or npm -g of Nodefile.
+if grep -q 'pip3 install' "$ROOT/scripts/tasks.sh" || grep -q 'https://get.haskellstack.org' "$ROOT/scripts/tasks.sh"; then
+  printf 'FAIL tasks still use pip3 or the stack installer\n' >&2
+  fail=1
+else
+  printf 'ok   no pip3 or stack curl installer\n'
+fi
+if grep -q 'npm install -g $(cat' "$ROOT/scripts/tasks.sh" || grep -q 'create-react-app' "$ROOT/scripts/tasks.sh"; then
+  printf 'FAIL tasks still npm-install Nodefile\n' >&2
+  fail=1
+else
+  printf 'ok   node CLIs are not a global npm dump\n'
+fi
+if grep -q 'mise use -g' "$ROOT/scripts/tasks.sh" && grep -q 'uv tool install' "$ROOT/scripts/tasks.sh"; then
+  printf 'ok   init uses mise and uv\n'
+else
+  printf 'FAIL init install path\n' >&2
+  fail=1
+fi
+
+sample="$(mktemp)"
+filtered="$(mktemp)"
+cat >"$sample" <<'EOF'
+tap "homebrew/core"
+tap "homebrew/cask"
+tap "homebrew/bundle"
+tap "homebrew/services"
+tap "heroku/brew"
+brew "node"
+brew "node@16"
+brew "python@3.9"
+brew "python@3.10"
+brew "exa"
+brew "youtube-dl"
+brew "thefuck"
+brew "yarn"
+brew "openjdk@8"
+brew "go"
+brew "pyenv"
+brew "pypy3"
+brew "ripgrep"
+brew "heroku/brew/heroku"
+cask "iterm2"
+mas "Xcode", id: 497799835
+EOF
+(
+  # shellcheck disable=SC1091
+  source "$ROOT/scripts/lib.sh"
+  modernize_brewfile "$sample" "$filtered"
+)
+for gone in 'homebrew/core' 'homebrew/cask' 'node@16' 'python@3.9' 'python@3.10' \
+  '"exa"' '"youtube-dl"' '"thefuck"' '"yarn"' 'openjdk@8' '"go"' '"pyenv"' '"pypy3"' '"node"'; do
+  if grep -q "$gone" "$filtered"; then
+    printf 'FAIL brewfile still has %s\n' "$gone" >&2
+    fail=1
+  fi
+done
+for kept in 'tap "heroku/brew"' 'brew "ripgrep"' 'brew "heroku/brew/heroku"' 'cask "iterm2"' 'mas "Xcode", id: 497799835'; do
+  if grep -qxF "$kept" "$filtered"; then
+    printf 'ok   brewfile keeps %s\n' "$kept"
+  else
+    printf 'FAIL brewfile dropped %s\n' "$kept" >&2
+    fail=1
+  fi
+done
+if grep -q 'ruff' "$ROOT/install/uv-tools.txt" && ! grep -q '==' "$ROOT/install/uv-tools.txt"; then
+  printf 'ok   uv tools manifest\n'
+else
+  printf 'FAIL uv tools manifest\n' >&2
+  fail=1
+fi
+
+# uv-tools.txt lines become `uv tool install` arguments, comments skipped.
+uv_log="$(mktemp)"
+uv_home="$(mktemp -d)"
+mkdir -p "$uv_home/bin" "$uv_home/install"
+cat >"$uv_home/bin/uv" <<EOF
+#!/bin/sh
+printf '%s\n' "\$*" >> "$uv_log"
+EOF
+chmod +x "$uv_home/bin/uv"
+cat >"$uv_home/install/uv-tools.txt" <<'EOF'
+# comment
+ruff
+jupyterlab --with numpy
+
+EOF
+# shellcheck disable=SC2016
+PATH="$uv_home/bin:$PATH" DOTFILES_DIR="$uv_home" bash --noprofile --norc -c '
+  source "$1"
+  install_uv_tools
+' bash "$ROOT/scripts/tasks.sh" >"$uv_home/out" 2>"$uv_home/err" || {
+  printf 'FAIL uv tool install function\n' >&2
+  cat "$uv_home/err" >&2
+  fail=1
+}
+if [[ "$(cat "$uv_log")" == $'tool install ruff\ntool install jupyterlab --with numpy' ]]; then
+  printf 'ok   uv tool lines\n'
+else
+  printf 'FAIL uv tool lines (%s)\n' "$(cat "$uv_log" 2>/dev/null)" >&2
+  fail=1
+fi
+rm -rf "$uv_home" "$uv_log"
+rm -f "$sample" "$filtered"
 
 rm -rf "$LINK_HOME"
 exit "$fail"

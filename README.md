@@ -9,6 +9,7 @@ works; it just calls mise.
 ```sh
 curl https://mise.run | sh          # once
 mise run                            # symlink configs into $HOME
+mise run init                       # dev tools (alias: install)
 mise tasks                          # everything else
 ```
 
@@ -24,6 +25,26 @@ mise run linux
 That links configs, installs zsh, tmux (resurrect + continuum), the Hack
 font, herdr, and the pi coding agent. iTerm2 and Hammerspoon stay macOS-only
 (`mise run iterm2`, `mise run hammerspoon`).
+
+## Dev tools
+
+`mise run init` (also `mise run install`, or `mise run packages`) is the
+machine setup for compilers and CLIs. It writes `~/.config/mise/config.toml`
+and does not install a global pip or npm dump.
+
+| What you used to get | What init does now |
+| --- | --- |
+| Homebrew `python@3.9`, `node@16`, `pyenv`, `go`, `openjdk@8` | mise: Node LTS, Python 3.14, Go, Java LTS |
+| `pip3 install -r install/Pythonfile` | `uv tool install` from `install/uv-tools.txt` (ruff, pre-commit, ipython, pynvim). The old freeze is kept but not installed. |
+| `npm install -g` create-react-app, expo-cli, eslint, prettier, typescript | mise npm tools: typescript, prettier, eslint. pnpm and yarn come from corepack. Abandoned global CLIs are not installed. |
+| `exa`, `youtube-dl`, `thefuck` | `eza`, `yt-dlp`, `pay-respects` (the `fuck` alias still works; thefuck is used if it is already installed) |
+
+Homebrew still installs the rest of `install/Brewfile`. Built-in taps
+(`homebrew/core`, `homebrew/cask`, and the rest) are skipped, because tapping
+them fails on current Homebrew. `mise run haskell` is separate: one
+noninteractive GHCup bootstrap for GHC, Cabal, Stack, and HLS.
+
+Open a new shell after init so `mise activate` in `.zshrc` picks up the shims.
 
 ## Terminal
 

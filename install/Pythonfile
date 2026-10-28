@@ -1,3 +1,5 @@
+# Legacy freeze from an old global pip. `mise run init` does not install this.
+# Python CLIs are listed in uv-tools.txt and installed with `uv tool install`.
 ansicolor
 anyio
 appdirs

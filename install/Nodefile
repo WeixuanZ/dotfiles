@@ -1,5 +1,4 @@
-create-react-app
-eslint
-expo-cli
-prettier
-typescript
+# Unused. `mise run init` installs typescript, prettier, and eslint through
+# mise's npm backend, and pnpm/yarn through corepack.
+# create-react-app and expo-cli are not installed. Use the project's own
+# toolchain (vite, `pnpm dlx expo`) instead of a global CLI.

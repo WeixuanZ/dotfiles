@@ -118,7 +118,8 @@ zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
 
 # fzf-tab
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+# eza replaced exa. Fall back for a machine that has not run `mise run init`.
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'command eza -1 --color=always $realpath || command exa -1 --color=always $realpath || command ls -1 --color=auto $realpath'
 zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
     fzf-preview 'echo ${(P)word}'
 zstyle ':fzf-tab:complete:(\\|*/|)man:*' fzf-preview 'man $word'
@@ -174,8 +175,11 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools
 # Tikzit
 export PATH="$PATH:/Applications/TikZiT.app/Contents/MacOS"
 
-# thefuck is optional; don't abort interactive startup when it isn't installed.
-if command -v thefuck >/dev/null 2>&1; then
+# pay-respects replaces thefuck. Keep thefuck if that is what this machine has.
+# The alias stays `fuck`, which is what `thefuck --alias` used to bind.
+if command -v pay-respects >/dev/null 2>&1; then
+  eval "$(pay-respects zsh --alias fuck)"
+elif command -v thefuck >/dev/null 2>&1; then
   eval "$(thefuck --alias)"
 fi
 
