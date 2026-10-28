@@ -1,0 +1,96 @@
+# Herdr, keyed and coloured like misc/.tmux.conf.
+# Prefix is Ctrl-Space. Splits and pane movement follow the tmux vim map.
+# Alacritty attaches the persistent session named "main".
+
+# Skip the first-run wizard so a terminal can attach unattended.
+onboarding = false
+
+[theme]
+# "terminal" follows Alacritty's monokai-tasty ANSI palette.
+# Chrome colours below match that palette and the tmux status bar
+# (black panels, yellow accent, monokai green / red).
+name = "terminal"
+
+[theme.custom]
+panel_bg = "#262626"
+sidebar_bg = "#1c1c1c"
+active_row_bg = "#5f5f5f"
+selection_bg = "#5f5f5f"
+accent = "#ff9700"
+green = "#a4e400"
+red = "#ff005f"
+yellow = "#ff9700"
+blue = "#62d8f1"
+
+[terminal]
+default_shell = "zsh"
+# Login shells so .zprofile / mise activation run in every pane.
+shell_mode = "login"
+new_cwd = "follow"
+
+[keys]
+prefix = "ctrl+space"
+
+# tmux: prefix R
+reload_config = "prefix+shift+r"
+
+# tmux: prefix c / prefix t / prefix space / prefix n
+new_tab = "prefix+c"
+next_tab = ["prefix+n", "prefix+space", "prefix+t"]
+# tmux: prefix p / prefix bspace. prefix T stays "rename tab" (herdr default).
+previous_tab = ["prefix+p", "prefix+backspace"]
+switch_tab = "prefix+1..9"
+
+# tmux: prefix a (last pane), prefix [ (copy mode)
+last_pane = "prefix+a"
+copy_mode = "prefix+["
+
+# tmux: prefix v is a vertical split, prefix H a horizontal split.
+split_vertical = "prefix+v"
+split_horizontal = ["prefix+shift+h", "prefix+minus"]
+close_pane = "prefix+x"
+zoom = "prefix+z"
+
+# tmux: prefix h/j/k/l and Ctrl-h/j/k/l (vim-aware in tmux; both chords here).
+# prefix+ctrl+* covers the case where Ctrl is still held after the prefix.
+focus_pane_left = ["prefix+h", "ctrl+h", "prefix+ctrl+h"]
+focus_pane_down = ["prefix+j", "ctrl+j", "prefix+ctrl+j"]
+focus_pane_up = ["prefix+k", "ctrl+k", "prefix+ctrl+k"]
+focus_pane_right = ["prefix+l", "ctrl+l", "prefix+ctrl+l"]
+
+# tmux prefix+q was display-panes. Herdr has no pane-number overlay;
+# prefix+g is the goto chooser. prefix+q detaches, and so does tmux's prefix+d.
+detach = ["prefix+d", "prefix+q"]
+goto = "prefix+g"
+toggle_sidebar = "prefix+b"
+
+[ui]
+mouse_capture = true
+# Mouse drag copies. Over SSH, Herdr delivers that to the client terminal;
+# Alacritty accepts it via OSC 52 (see alacritty.toml).
+copy_on_select = true
+# tmux status line sits at the bottom.
+tab_bar_position = "bottom"
+accent = "#ff9700"
+pane_borders = "auto"
+# Internal splitters only, like tmux.
+pane_outer_borders = false
+pane_gaps = false
+# prefix+c creates a tab immediately, like tmux prefix+c.
+prompt_new_tab_name = false
+hide_tab_bar_when_single_tab = false
+window_title = "{hostname}: {workspace}"
+
+[server]
+headless_cols = 120
+headless_rows = 40
+
+[session]
+# After a reboot the systemd user service (or LaunchAgent) starts the
+# server, and panes that have an official integration resume their session.
+resume_agents_on_restore = true
+startup_per_agent_delay_ms = 100
+
+[experimental]
+# Replay recent pane history when the server itself restarts.
+pane_history = true

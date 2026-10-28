@@ -1,0 +1,10 @@
+{
+  "defaultProvider": "claude-sdk",
+  "defaultModel": "claude-sonnet-5-5",
+  "shellPath": "zsh",
+  "packages": [
+    "npm:pi-claude-subscription",
+    "npm:@tintinweb/pi-subagents",
+    "npm:@ogulcancelik/pi-herdr"
+  ]
+}

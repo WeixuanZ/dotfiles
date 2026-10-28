@@ -1,0 +1,19 @@
+#!/bin/sh
+# Alacritty entrypoint. Attach the persistent herdr session "main", creating
+# it the first time. If herdr is not installed yet, drop into a login zsh
+# instead of exiting the terminal.
+set -eu
+
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:$PATH"
+
+if ! command -v herdr >/dev/null 2>&1; then
+  echo "herdr is not installed; starting zsh. Install with: mise run herdr" >&2
+  exec zsh -l
+fi
+
+# A clean detach (prefix+q / prefix+d) returns success. Only a missing
+# session should fall through and create "main".
+if herdr session attach main; then
+  exit 0
+fi
+exec herdr --session main

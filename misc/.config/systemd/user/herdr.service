@@ -1,0 +1,13 @@
+[Unit]
+Description=herdr terminal workspace server
+Documentation=https://herdr.dev
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/herdr-server
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

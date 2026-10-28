@@ -1,0 +1,103 @@
+# Task runner for these dotfiles. `mise run` links configs into $HOME.
+# `mise tasks` lists everything the Makefile used to expose, plus the
+# Linux terminal stack (tmux, alacritty, herdr, pi).
+
+[tools]
+tmux = "3.7c"
+
+[tasks.default]
+description = "Link all tracked dotfiles into $HOME"
+depends = ["link"]
+run = "true"
+
+[tasks.link]
+description = "Link all tracked dotfiles into $HOME"
+run = "bash scripts/tasks.sh link"
+
+[tasks.help]
+description = "List tasks"
+run = "mise tasks"
+
+[tasks.brew]
+description = "Install Homebrew (Linuxbrew on Linux)"
+run = "bash scripts/tasks.sh brew"
+
+[tasks.update-brewfile]
+description = "Rewrite install/Brewfile and install/Appfile from the current machine"
+depends = ["brew"]
+run = "bash scripts/tasks.sh update-brewfile"
+
+[tasks.update-installfile]
+description = "Rewrite install/Pythonfile from pip freeze"
+depends = ["brew"]
+run = "bash scripts/tasks.sh update-installfile"
+
+[tasks.brew-packages]
+description = "Install Homebrew packages from install/Brewfile"
+run = "bash scripts/tasks.sh brew-packages"
+
+[tasks.python-packages]
+description = "Install Python packages from install/Pythonfile"
+run = "bash scripts/tasks.sh python-packages"
+
+[tasks.node-packages]
+description = "Install Node packages from install/Nodefile"
+run = "bash scripts/tasks.sh node-packages"
+
+[tasks.packages]
+description = "Install Homebrew, Python, and Node packages"
+depends = ["brew-packages", "python-packages", "node-packages"]
+run = "true"
+
+[tasks.apps]
+description = "Install macOS casks and Mac App Store apps from install/Appfile"
+run = "bash scripts/tasks.sh apps"
+
+[tasks.zsh]
+description = "Install oh-my-zsh, plugins, and link .zshrc"
+run = "bash scripts/tasks.sh zsh"
+
+[tasks.vim]
+description = "Install VimPlug and plugins, and link .vimrc"
+run = "bash scripts/tasks.sh vim"
+
+[tasks.vim-ycm]
+description = "Install YouCompleteMe for all languages"
+run = "bash scripts/tasks.sh vim-ycm"
+
+[tasks.iterm2]
+description = "Install and configure iTerm2 (macOS) and JetBrains Mono"
+run = "bash scripts/tasks.sh iterm2"
+
+[tasks.hammerspoon]
+description = "Install Hammerspoon and Spoons (macOS)"
+run = "bash scripts/tasks.sh hammerspoon"
+
+[tasks.haskell]
+description = "Install GHCup and Stack"
+run = "bash scripts/tasks.sh haskell"
+
+[tasks.tmux]
+description = "Install TPM, resurrect, and continuum; restore on login"
+run = "bash scripts/tasks.sh tmux"
+
+[tasks.alacritty]
+description = "Install the Hack font and check the Alacritty config"
+run = "bash scripts/tasks.sh alacritty"
+
+[tasks.herdr]
+description = "Install herdr, the pi integration, and the user service"
+run = "bash scripts/tasks.sh herdr"
+
+[tasks.pi]
+description = "Install pi and the Claude subscription, subagent, and herdr packages"
+run = "bash scripts/tasks.sh pi"
+
+[tasks.linux]
+description = "Link configs and set up zsh, tmux, Alacritty, herdr, and pi"
+depends = ["link", "zsh", "tmux", "alacritty", "herdr", "pi"]
+run = "true"
+
+[tasks.test]
+description = "Check configs, the linker, tmux, clipboard, and herdr on Linux"
+run = "bash scripts/test-dotfiles.sh"

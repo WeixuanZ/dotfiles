@@ -3,6 +3,7 @@
 
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
+export PATH="$HOME/.local/bin:$PATH"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -73,7 +74,20 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
 
-plugins=(fzf-tab zsh-vi-mode z zsh-autosuggestions sublime macos git colored-man-pages autoswitch_virtualenv docker docker-compose zsh-syntax-highlighting)
+plugins=(
+  fzf-tab
+  zsh-vi-mode
+  z
+  zsh-autosuggestions
+  git
+  colored-man-pages
+  autoswitch_virtualenv
+  docker
+  docker-compose
+  zsh-syntax-highlighting
+)
+# macOS-only oh-my-zsh plugins. Loading them on Linux just prints errors.
+[[ "$OSTYPE" == darwin* ]] && plugins+=(macos sublime)
 
 
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
@@ -115,6 +129,13 @@ ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 
 source $ZSH/oh-my-zsh.sh
 
+# mise (task runner and, when used, tool versions). Installed by `mise run`.
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+elif [[ -x "$HOME/.local/bin/mise" ]]; then
+  eval "$("$HOME/.local/bin/mise" activate zsh)"
+fi
+
 
 # -----------------------------------------------------------------------------
 
@@ -153,13 +174,18 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools
 # Tikzit
 export PATH="$PATH:/Applications/TikZiT.app/Contents/MacOS"
 
-eval $(thefuck --alias)
+# thefuck is optional; don't abort interactive startup when it isn't installed.
+if command -v thefuck >/dev/null 2>&1; then
+  eval "$(thefuck --alias)"
+fi
 
 # Heroku autocomplete setup
 HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
 
-# Google Cloud SDK autocomplete
-source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
+# Google Cloud SDK autocomplete (macOS cask path; absent on Linux)
+_gcloud_completion="/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
+[[ -r "$_gcloud_completion" ]] && source "$_gcloud_completion"
+unset _gcloud_completion
 
 
 # -----------------------------------------------------------------------------
@@ -209,4 +235,17 @@ function z {
     [ $# -gt 0 ] && _z "$*" && return
     cd "$(_z -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
 }
+
+# herdr completions, when the binary is installed.
+if command -v herdr >/dev/null 2>&1; then
+  eval "$(herdr completion zsh)"
+fi
+
+# Keep a tmux server alive so continuum can restore after a reboot. Do not
+# attach: Alacritty attaches the herdr session "main". Skip inside tmux,
+# inside herdr, and in non-interactive shells (scp, scripts).
+if [[ -o interactive ]] && command -v tmux >/dev/null 2>&1 \
+    && [[ -z ${TMUX:-} && -z ${HERDR_ENV:-} ]]; then
+  tmux start-server 2>/dev/null || true
+fi
 
