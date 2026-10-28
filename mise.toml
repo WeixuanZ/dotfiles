@@ -50,9 +50,9 @@ depends = ["tools"]
 run = "true"
 
 [tasks.init]
-description = "Install dev toolchains, uv tools, and Homebrew packages"
+description = "Install dev toolchains, uv tools, Homebrew packages, and SSH"
 alias = "install"
-depends = ["tools", "brew-packages"]
+depends = ["tools", "brew-packages", "ssh"]
 run = "true"
 
 [tasks.packages]
@@ -101,12 +101,16 @@ description = "Install herdr, the pi integration, and the user service"
 run = "bash scripts/tasks.sh herdr"
 
 [tasks.pi]
-description = "Install pi and the Claude subscription, subagent, and herdr packages"
+description = "Install pi and the Claude, Gemini, Grok, subagent, and herdr packages"
 run = "bash scripts/tasks.sh pi"
 
+[tasks.ssh]
+description = "Public-key-only OpenSSH; Tailscale uses system ssh, not Tailscale SSH"
+run = "bash scripts/tasks.sh ssh"
+
 [tasks.linux]
-description = "Link configs and set up zsh, tmux, Alacritty, herdr, and pi"
-depends = ["link", "zsh", "tmux", "alacritty", "herdr", "pi"]
+description = "Link configs and set up zsh, tmux, Alacritty, herdr, pi, and SSH"
+depends = ["link", "zsh", "tmux", "alacritty", "herdr", "pi", "ssh"]
 run = "true"
 
 [tasks.test]

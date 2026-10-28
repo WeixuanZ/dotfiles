@@ -25,6 +25,7 @@ bash -n "$ROOT/misc/.local/bin/tmux-clipboard"
 bash -n "$ROOT/misc/.local/bin/tmux-ensure"
 bash -n "$ROOT/misc/.local/bin/herdr-main"
 bash -n "$ROOT/misc/.local/bin/herdr-server"
+bash -n "$ROOT/misc/.local/bin/wt-sync-deps"
 printf 'ok   shell syntax\n'
 
 python3 - <<PY
@@ -42,10 +43,11 @@ def load_toml(path):
 
 mise = load_toml(root / "mise.toml")
 tasks = mise["tasks"]
-for name in ("link", "tmux", "alacritty", "herdr", "pi", "linux", "test", "init", "tools"):
+for name in ("link", "tmux", "alacritty", "herdr", "pi", "linux", "test", "init", "tools", "ssh"):
     assert name in tasks, name
 assert tasks["init"].get("alias") == "install"
-assert tasks["init"]["depends"] == ["tools", "brew-packages"]
+assert tasks["init"]["depends"] == ["tools", "brew-packages", "ssh"]
+assert tasks["linux"]["depends"][-1] == "ssh"
 assert "pip freeze" not in tasks["update-installfile"]["description"]
 
 herdr = load_toml(root / "misc/.config/herdr/config.toml")
@@ -75,6 +77,8 @@ settings = json.loads((root / "misc/.pi/agent/settings.json").read_text())
 assert settings["defaultProvider"] == "claude-sdk"
 assert settings["defaultModel"] == "claude-sonnet-5-5"
 assert "npm:pi-claude-subscription" in settings["packages"]
+assert "npm:pi-provider-antigravity" in settings["packages"]
+assert "npm:pi-xai-supergrok" in settings["packages"]
 assert "npm:@tintinweb/pi-subagents" in settings["packages"]
 assert "npm:@ogulcancelik/pi-herdr" in settings["packages"]
 sub = json.loads((root / "misc/.pi/agent/subagents.json").read_text())
@@ -82,6 +86,34 @@ assert sub["backgroundByDefault"] is True
 assert sub["maxConcurrent"] >= 2
 sdk = json.loads((root / "misc/.pi/agent/claude-sdk.json").read_text())
 assert "pathToClaudeCodeExecutable" not in sdk
+mcp = json.loads((root / "misc/.pi/agent/mcp.json").read_text())
+assert mcp["mcpServers"] == {}
+shortcuts = (root / "misc/.pi/agent/extensions/model-shortcuts.ts").read_text()
+assert 'registerCommand("gemini"' in shortcuts
+assert 'registerCommand("opus"' in shortcuts
+assert "gemini-4-argon" in shortcuts
+assert "claude-opus-5-5" in shortcuts
+assert "antigravity" in shortcuts
+assert "claude-sdk" in shortcuts
+
+wt = load_toml(root / "misc/.config/worktrunk/config.toml")
+assert wt["worktree-path"] == ".worktrees/{{ branch | sanitize }}"
+assert isinstance(wt["pre-start"], list) and wt["pre-start"]
+assert "wt-sync-deps" in wt["pre-start"][0]["deps"]
+deps = (root / "misc/.local/bin/wt-sync-deps").read_text()
+assert "wt step copy-ignored" in deps
+assert "uv sync --frozen" in deps
+assert "pnpm install --frozen-lockfile" in deps
+assert "npm ci" in deps
+ssh_client = (root / "misc/.ssh/config").read_text()
+assert "PubkeyAuthentication yes" in ssh_client
+assert "PasswordAuthentication no" in ssh_client
+assert "IgnoreUnknown UseKeychain" in ssh_client
+assert "*.ts.net" in ssh_client
+sshd = (root / "install/ssh/99-dotfiles-pubkey.conf").read_text()
+assert "AuthenticationMethods publickey" in sshd
+assert "PasswordAuthentication no" in sshd
+assert "tailscale set --ssh\n" not in sshd
 
 for plist in (root / "install/macos").glob("*.plist"):
     with plist.open("rb") as f:
@@ -109,6 +141,11 @@ for path in \
   .pi/agent/settings.json \
   .pi/agent/subagents.json \
   .pi/agent/claude-sdk.json \
+  .pi/agent/mcp.json \
+  .pi/agent/extensions/model-shortcuts.ts \
+  .config/worktrunk/config.toml \
+  .ssh/config \
+  .local/bin/wt-sync-deps \
   .hammerspoon/init.lua \
   .config/nvim/init.vim
 do
@@ -122,6 +159,8 @@ done
 # Executable bits survive the symlink.
 [[ -x "$LINK_HOME/.local/bin/tmux-clipboard" ]] && printf 'ok   clipboard is executable\n' \
   || { printf 'FAIL clipboard not executable\n' >&2; fail=1; }
+[[ -x "$LINK_HOME/.local/bin/wt-sync-deps" ]] && printf 'ok   wt-sync-deps is executable\n' \
+  || { printf 'FAIL wt-sync-deps not executable\n' >&2; fail=1; }
 
 # Clipboard: SSH must produce OSC 52 and must not call a local tool.
 FAKE_BIN="$(mktemp -d)"
@@ -293,6 +332,13 @@ else
   printf 'FAIL zshrc macos plugins\n' >&2
   fail=1
 fi
+if grep -q -- '--wt-new' "$ROOT/zsh/.zshrc" && grep -q 'wt switch --create' "$ROOT/zsh/.zshrc" \
+    && grep -q 'command pi' "$ROOT/zsh/.zshrc" && grep -q 'wt config shell init zsh' "$ROOT/zsh/.zshrc"; then
+  printf 'ok   zshrc pi worktrunk wrapper\n'
+else
+  printf 'FAIL zshrc pi worktrunk wrapper\n' >&2
+  fail=1
+fi
 
 # Old make bug: appending the zsh path to /etc/shell (missing the s).
 if grep -n '/etc/shell' "$ROOT/scripts/tasks.sh" | grep -v '/etc/shells' | grep -q .; then
@@ -319,6 +365,19 @@ if grep -q 'mise use -g' "$ROOT/scripts/tasks.sh" && grep -q 'uv tool install' "
   printf 'ok   init uses mise and uv\n'
 else
   printf 'FAIL init install path\n' >&2
+  fail=1
+fi
+if grep -q 'gh@latest' "$ROOT/scripts/tasks.sh" && grep -q 'worktrunk@latest' "$ROOT/scripts/tasks.sh" \
+    && grep -q 'aqua:tailscale/tailscale@latest' "$ROOT/scripts/tasks.sh"; then
+  printf 'ok   init installs gh, worktrunk, and tailscale\n'
+else
+  printf 'FAIL init missing gh, worktrunk, or tailscale\n' >&2
+  fail=1
+fi
+if grep -q -- '--ssh=false' "$ROOT/scripts/tasks.sh" && ! grep -Eq 'tailscale set --ssh($|[^.=-])' "$ROOT/scripts/tasks.sh"; then
+  printf 'ok   tailscale ssh stays off\n'
+else
+  printf 'FAIL tailscale ssh flag\n' >&2
   fail=1
 fi
 
@@ -405,6 +464,126 @@ else
   fail=1
 fi
 rm -rf "$uv_home" "$uv_log"
+
+# worktrunk deps: copy is best-effort, then the lockfile that is actually present.
+sync_home="$(mktemp -d)"
+sync_log="$sync_home/log"
+mkdir -p "$sync_home/bin" "$sync_home/repo"
+cat >"$sync_home/bin/wt" <<EOF
+#!/bin/sh
+printf '%s\n' "wt \$*" >> "$sync_log"
+exit 0
+EOF
+cat >"$sync_home/bin/uv" <<EOF
+#!/bin/sh
+printf '%s\n' "uv \$*" >> "$sync_log"
+case "\$*" in
+  *--frozen*) exit 1 ;;
+esac
+exit 0
+EOF
+cat >"$sync_home/bin/pnpm" <<EOF
+#!/bin/sh
+printf '%s\n' "pnpm \$*" >> "$sync_log"
+EOF
+cat >"$sync_home/bin/npm" <<EOF
+#!/bin/sh
+printf '%s\n' "npm \$*" >> "$sync_log"
+EOF
+cat >"$sync_home/bin/yarn" <<EOF
+#!/bin/sh
+printf '%s\n' "yarn \$*" >> "$sync_log"
+EOF
+chmod +x "$sync_home/bin/"*
+git -C "$sync_home/repo" init -q
+: >"$sync_log"
+(cd "$sync_home/repo" && PATH="$sync_home/bin:$PATH" bash "$ROOT/misc/.local/bin/wt-sync-deps")
+if [[ "$(cat "$sync_log")" == "wt step copy-ignored" ]]; then
+  printf 'ok   wt-sync-deps empty repo\n'
+else
+  printf 'FAIL wt-sync-deps empty repo (%s)\n' "$(cat "$sync_log")" >&2
+  fail=1
+fi
+: >"$sync_log"
+echo '{}' >"$sync_home/repo/package.json"
+printf 'name: app\n' >"$sync_home/repo/pnpm-lock.yaml"
+(cd "$sync_home/repo" && PATH="$sync_home/bin:$PATH" bash "$ROOT/misc/.local/bin/wt-sync-deps")
+if [[ "$(cat "$sync_log")" == $'wt step copy-ignored\npnpm install --frozen-lockfile' ]]; then
+  printf 'ok   wt-sync-deps pnpm\n'
+else
+  printf 'FAIL wt-sync-deps pnpm (%s)\n' "$(cat "$sync_log")" >&2
+  fail=1
+fi
+rm -f "$sync_home/repo/pnpm-lock.yaml"
+printf '{}\n' >"$sync_home/repo/package-lock.json"
+: >"$sync_log"
+(cd "$sync_home/repo" && PATH="$sync_home/bin:$PATH" bash "$ROOT/misc/.local/bin/wt-sync-deps")
+if [[ "$(cat "$sync_log")" == $'wt step copy-ignored\nnpm ci' ]]; then
+  printf 'ok   wt-sync-deps npm ci\n'
+else
+  printf 'FAIL wt-sync-deps npm ci (%s)\n' "$(cat "$sync_log")" >&2
+  fail=1
+fi
+rm -f "$sync_home/repo/package-lock.json"
+printf 'lock\n' >"$sync_home/repo/yarn.lock"
+: >"$sync_log"
+(cd "$sync_home/repo" && PATH="$sync_home/bin:$PATH" bash "$ROOT/misc/.local/bin/wt-sync-deps")
+if [[ "$(cat "$sync_log")" == $'wt step copy-ignored\nyarn install --frozen-lockfile' ]]; then
+  printf 'ok   wt-sync-deps yarn classic\n'
+else
+  printf 'FAIL wt-sync-deps yarn classic (%s)\n' "$(cat "$sync_log")" >&2
+  fail=1
+fi
+printf 'nodeLinker: node-modules\n' >"$sync_home/repo/.yarnrc.yml"
+: >"$sync_log"
+(cd "$sync_home/repo" && PATH="$sync_home/bin:$PATH" bash "$ROOT/misc/.local/bin/wt-sync-deps")
+if [[ "$(cat "$sync_log")" == $'wt step copy-ignored\nyarn install --immutable' ]]; then
+  printf 'ok   wt-sync-deps yarn berry\n'
+else
+  printf 'FAIL wt-sync-deps yarn berry (%s)\n' "$(cat "$sync_log")" >&2
+  fail=1
+fi
+rm -f "$sync_home/repo/yarn.lock" "$sync_home/repo/.yarnrc.yml" "$sync_home/repo/pnpm-lock.yaml" \
+  "$sync_home/repo/package-lock.json"
+: >"$sync_log"
+(cd "$sync_home/repo" && PATH="$sync_home/bin:$PATH" bash "$ROOT/misc/.local/bin/wt-sync-deps")
+if [[ "$(cat "$sync_log")" == $'wt step copy-ignored\nnpm install' ]]; then
+  printf 'ok   wt-sync-deps npm install\n'
+else
+  printf 'FAIL wt-sync-deps npm install (%s)\n' "$(cat "$sync_log")" >&2
+  fail=1
+fi
+mkdir -p "$sync_home/repo/node_modules"
+: >"$sync_log"
+(cd "$sync_home/repo" && PATH="$sync_home/bin:$PATH" bash "$ROOT/misc/.local/bin/wt-sync-deps")
+if [[ "$(cat "$sync_log")" == "wt step copy-ignored" ]]; then
+  printf 'ok   wt-sync-deps keeps copied node_modules\n'
+else
+  printf 'FAIL wt-sync-deps keeps copied node_modules (%s)\n' "$(cat "$sync_log")" >&2
+  fail=1
+fi
+printf 'uv\n' >"$sync_home/repo/uv.lock"
+mkdir -p "$sync_home/repo/.venv/bin"
+printf '#!/bin/sh\n' >"$sync_home/repo/.venv/bin/python"
+chmod +x "$sync_home/repo/.venv/bin/python"
+: >"$sync_log"
+(cd "$sync_home/repo" && PATH="$sync_home/bin:$PATH" bash "$ROOT/misc/.local/bin/wt-sync-deps")
+if [[ "$(cat "$sync_log")" == "wt step copy-ignored" ]]; then
+  printf 'ok   wt-sync-deps keeps copied venv\n'
+else
+  printf 'FAIL wt-sync-deps keeps copied venv (%s)\n' "$(cat "$sync_log")" >&2
+  fail=1
+fi
+rm -rf "$sync_home/repo/.venv"
+: >"$sync_log"
+(cd "$sync_home/repo" && PATH="$sync_home/bin:$PATH" bash "$ROOT/misc/.local/bin/wt-sync-deps")
+if [[ "$(cat "$sync_log")" == $'wt step copy-ignored\nuv sync --frozen\nuv sync' ]]; then
+  printf 'ok   wt-sync-deps uv sync falls back\n'
+else
+  printf 'FAIL wt-sync-deps uv (%s)\n' "$(cat "$sync_log")" >&2
+  fail=1
+fi
+rm -rf "$sync_home"
 rm -f "$sample" "$filtered"
 
 rm -rf "$LINK_HOME"

@@ -137,6 +137,46 @@ elif [[ -x "$HOME/.local/bin/mise" ]]; then
   eval "$("$HOME/.local/bin/mise" activate zsh)"
 fi
 
+# worktrunk's shell hook is what cds the current shell on `wt switch`.
+# `pi --wt` calls that function, so the hook has to be installed first.
+if command -v wt >/dev/null 2>&1; then
+  eval "$(wt config shell init zsh)"
+fi
+
+# pi --wt <branch> [args...]       worktree for an existing branch, then pi
+# pi --wt-new <branch> [args...]   create the branch and worktree, then pi
+# Anything else is the real pi binary.
+pi() {
+  local mode="${1:-}"
+  if [[ "$mode" != "--wt-new" && "$mode" != "--wt" ]]; then
+    command pi "$@"
+    return
+  fi
+  shift
+  local branch="${1:-}"
+  if [[ -z "$branch" || "$branch" == -* ]]; then
+    print -u2 "usage: pi --wt-new <branch> [pi args...]"
+    print -u2 "       pi --wt <branch> [pi args...]"
+    return 2
+  fi
+  shift
+  if ! command -v wt >/dev/null 2>&1; then
+    print -u2 "worktrunk (wt) is not installed. Run: mise run init"
+    return 127
+  fi
+  if [[ "$mode" == "--wt-new" ]]; then
+    if (( $# )); then
+      wt switch --create "$branch" -x pi -- "$@"
+    else
+      wt switch --create "$branch" -x pi
+    fi
+  elif (( $# )); then
+    wt switch "$branch" -x pi -- "$@"
+  else
+    wt switch "$branch" -x pi
+  fi
+}
+
 
 # -----------------------------------------------------------------------------
 

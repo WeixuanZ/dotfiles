@@ -4,6 +4,8 @@
   "shellPath": "zsh",
   "packages": [
     "npm:pi-claude-subscription",
+    "npm:pi-provider-antigravity",
+    "npm:pi-xai-supergrok",
     "npm:@tintinweb/pi-subagents",
     "npm:@ogulcancelik/pi-herdr"
   ]

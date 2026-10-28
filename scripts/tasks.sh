@@ -36,6 +36,9 @@ DEV_TOOLS=(
   npm:typescript@latest
   npm:prettier@latest
   npm:eslint@latest
+  gh@latest
+  worktrunk@latest
+  aqua:tailscale/tailscale@latest
 )
 
 task_tools() {
@@ -52,7 +55,32 @@ task_tools() {
     warn "corepack is not on this node; pnpm and yarn were not activated"
   fi
   install_uv_tools
+  install_tailscale_daemon
   ok "dev tools ready: node $(node --version), python $(python --version)"
+}
+
+# The mise package is the CLI. The tunnel is a system daemon: the Mac app, or
+# tailscaled from the distro package. Tailscale SSH stays off; system sshd
+# owns port 22, including on the tailnet address (`mise run ssh`).
+install_tailscale_daemon() {
+  if is-macos; then
+    if is-executable brew; then
+      if ! brew list --cask tailscale >/dev/null 2>&1; then
+        brew install --cask tailscale || warn "brew cask tailscale failed; install the Tailscale Mac app"
+      fi
+    else
+      warn "Homebrew is not installed; install the Tailscale Mac app, then run: mise run ssh"
+    fi
+    return 0
+  fi
+  if systemctl list-unit-files --no-legend 'tailscaled.service' 2>/dev/null | grep -q tailscaled; then
+    return 0
+  fi
+  if [[ -x /usr/sbin/tailscaled || -x /usr/bin/tailscaled ]]; then
+    return 0
+  fi
+  info "Installing the Tailscale system daemon"
+  curl -fsSL https://tailscale.com/install.sh | sh || warn "Tailscale install script failed. See https://tailscale.com/download/linux"
 }
 
 task_link() {
@@ -344,6 +372,43 @@ task_herdr() {
   ok "herdr installed; session 'main' is what Alacritty attaches"
 }
 
+task_ssh() {
+  create_symlink "$DOTFILES_DIR/misc/.ssh/config" "$HOME/.ssh/config"
+  local drop_src="$DOTFILES_DIR/install/ssh/99-dotfiles-pubkey.conf"
+  local drop_dest="/etc/ssh/sshd_config.d/99-dotfiles-pubkey.conf"
+  local sshd_config="/etc/ssh/sshd_config"
+  if ! is-executable sudo; then
+    warn "no sudo; client config is linked. Install the server drop-in with: sudo cp $drop_src $drop_dest"
+  elif ! sudo mkdir -p /etc/ssh/sshd_config.d || ! sudo cp "$drop_src" "$drop_dest"; then
+    warn "could not install $drop_dest"
+  else
+    sudo chmod 644 "$drop_dest" || true
+    if [[ -f "$sshd_config" ]] && ! grep -qE '^[[:space:]]*Include[[:space:]]+/etc/ssh/sshd_config\.d/\*\.conf' "$sshd_config"; then
+      echo 'Include /etc/ssh/sshd_config.d/*.conf' | sudo tee -a "$sshd_config" >/dev/null \
+        || warn "could not add the sshd Include line"
+    fi
+    if is-macos; then
+      if is-executable systemsetup; then
+        sudo systemsetup -setremotelogin on || warn "could not enable Remote Login (System Settings → General → Sharing)"
+      fi
+      sudo launchctl kickstart -k system/com.openssh.sshd || warn "could not restart sshd"
+    elif systemctl cat ssh.service >/dev/null 2>&1; then
+      sudo systemctl reload ssh || sudo systemctl try-reload-or-restart ssh || warn "could not reload ssh"
+    elif systemctl cat sshd.service >/dev/null 2>&1; then
+      sudo systemctl reload sshd || sudo systemctl try-reload-or-restart sshd || warn "could not reload sshd"
+    else
+      warn "sshd drop-in is installed; no ssh.service or sshd.service to reload"
+    fi
+  fi
+  # `--ssh=false` is the whole point: Tailscale must not intercept port 22.
+  if command -v tailscale >/dev/null 2>&1; then
+    if ! tailscale set --ssh=false; then
+      warn "Tailscale SSH was not turned off. Log in with 'sudo tailscale up', then re-run. Do not enable Tailscale SSH."
+    fi
+  fi
+  ok "SSH is public-key only. Use system ssh, for example: ssh host.tailnet.ts.net"
+}
+
 task_pi() {
   if ! command -v pi >/dev/null 2>&1; then
     if command -v npm >/dev/null 2>&1; then
@@ -358,14 +423,22 @@ task_pi() {
     herdr integration install pi || warn "herdr integration install pi failed"
   fi
   cat <<'EOF'
-pi is configured for the Claude subscription via pi-claude-subscription.
+pi is configured for the Claude, Gemini Pro, and Grok premium subscriptions.
+The default model stays claude-sdk / claude-sonnet-5-5.
 
-  1. claude          # /login once with your Claude Pro/Max account
-  2. pi              # starts on claude-sdk / claude-sonnet-5-5
+  claude                 # once, with the Claude Pro/Max account
+  pi                     # then, inside pi:
+  /login antigravity     # Google AI Pro (Gemini). Model id gemini-4-argon
+  /login supergrok       # SuperGrok or X Premium+. Do not export XAI_API_KEY
+  /gemini                # switch this session to Gemini 4
+  /opus                  # switch this session to Claude Opus 5.5
+  /mcp                   # built-in MCP. `pi mcp add` writes ~/.pi/agent/mcp.json
 
-Do not export ANTHROPIC_API_KEY in the same shell if you want plan billing.
-The package strips that variable from the Claude Code subprocess, but an API
-key set for other tools is still an API key.
+Do not export ANTHROPIC_API_KEY, GEMINI_API_KEY, or XAI_API_KEY in that shell
+if you want plan billing. An API key set for other tools is still an API key.
+
+From zsh, `pi --wt <branch>` and `pi --wt-new <branch>` run pi inside a
+worktrunk. pre-start copies gitignored deps and installs the rest.
 
 Subagents (@tintinweb/pi-subagents) run in the background by default, up to
 8 at once. Inside herdr, @ogulcancelik/pi-herdr adds the herdr tool.
@@ -402,6 +475,7 @@ main() {
     alacritty) task_alacritty ;;
     herdr) task_herdr ;;
     pi) task_pi ;;
+    ssh) task_ssh ;;
     ""|-h|--help|help) usage ;;
     *) die "unknown task: $cmd" ;;
   esac

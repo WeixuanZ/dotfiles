@@ -38,13 +38,52 @@ and does not install a global pip or npm dump.
 | `pip3 install -r install/Pythonfile` | `uv tool install` from `install/uv-tools.txt` (ruff, pre-commit, ipython, pynvim). The old freeze is kept but not installed. |
 | `npm install -g` create-react-app, expo-cli, eslint, prettier, typescript | mise npm tools: typescript, prettier, eslint. pnpm and yarn come from corepack. Abandoned global CLIs are not installed. |
 | `exa`, `youtube-dl`, `thefuck` | `eza`, `yt-dlp`, `pay-respects` (the `fuck` alias still works; thefuck is used if it is already installed) |
+| `gh` was already in the Brewfile | mise also installs `gh`, plus `worktrunk` and the Tailscale CLI |
 
 Homebrew still installs the rest of `install/Brewfile`. Built-in taps
 (`homebrew/core`, `homebrew/cask`, and the rest) are skipped, because tapping
 them fails on current Homebrew. `mise run haskell` is separate: one
 noninteractive GHCup bootstrap for GHC, Cabal, Stack, and HLS.
 
+The Tailscale CLI from mise does not start the tunnel. On macOS, init
+installs the Tailscale cask (or use the Mac app). On Linux it installs the
+distro `tailscaled` when that service is missing. Then `sudo tailscale up`.
 Open a new shell after init so `mise activate` in `.zshrc` picks up the shims.
+
+## SSH and Tailscale
+
+`mise run ssh` (also part of `mise run init` and `mise run linux`) links
+`~/.ssh/config` and, with sudo, installs
+`/etc/ssh/sshd_config.d/99-dotfiles-pubkey.conf`.
+
+Both sides are public-key only: the client will not offer a password, and
+sshd accepts `AuthenticationMethods publickey`. An existing `~/.ssh/config`
+that is not already a symlink is renamed to `~/.ssh/config.orig`.
+
+Tailscale is only the network. MagicDNS names (`host.tailnet.ts.net`) are
+opened with the system `ssh`, not `tailscale ssh`. The task runs
+`tailscale set --ssh=false` so Tailscale's own SSH server does not take port
+22 on the tailnet address. Log in with `sudo tailscale up` if it has not
+been turned off yet, then run `mise run ssh` again.
+
+## worktrunk
+
+`~/.config/worktrunk/config.toml` puts worktrees in
+`.worktrees/<branch>`. Creating one runs `~/.local/bin/wt-sync-deps` before
+`wt switch -x` returns:
+
+1. `wt step copy-ignored` copies gitignored files (`node_modules`, `.venv`,
+   `.env`) with copy-on-write where the filesystem supports it.
+2. If that copy did not leave a usable tree, the script installs from the
+   lockfile it finds: `uv sync` for Python, then pnpm, `npm ci`, Yarn, or
+   `npm install`.
+
+`.zshrc` loads `wt config shell init zsh` and wraps `pi`:
+
+```sh
+pi --wt feature-a              # existing branch, then pi in that worktree
+pi --wt-new feature-a 'prompt' # create the branch and worktree, then pi
+```
 
 ## Terminal
 
@@ -73,15 +112,28 @@ resumes agent panes that have an official integration.
 ## pi
 
 `~/.pi/agent/settings.json` selects the Claude subscription (not an API key)
-and two plugins:
+as the default, and installs the other subscription providers next to it.
+Nothing in this repo stores an API key.
 
 | Package | What it does |
 | --- | --- |
-| `pi-claude-subscription` | Claude models through the Claude Code login (`claude-sdk/claude-sonnet-5-5`). Log in once with `claude`, then run `pi`. Do not export `ANTHROPIC_API_KEY` in that shell if you want plan billing. |
+| `pi-claude-subscription` | Claude models through the Claude Code login (`claude-sdk/claude-sonnet-5-5`). Log in once with `claude`, then run `pi`. |
+| `pi-provider-antigravity` | Gemini on a Google AI Pro or Ultra plan. `/login antigravity`, then `/gemini` (Gemini 4, `gemini-4-argon`). |
+| `pi-xai-supergrok` | SuperGrok or X Premium+. `/login supergrok`. Models are the live `grok-*` catalog. Do not export `XAI_API_KEY` if you want plan billing. |
 | `@tintinweb/pi-subagents` | Subagents run in the background (`backgroundByDefault`) and in parallel, up to 8 at once. |
 | `@ogulcancelik/pi-herdr` | Inside herdr, pi gets a `herdr` tool for panes, tabs, and workspaces. `mise run herdr` also installs herdr's own pi integration. |
 
-`mise run pi` installs pi and downloads those packages.
+Inside a session, `/opus` switches to `claude-opus-5-5` and `/gemini` switches
+to Gemini 4. `/model` still lists everything those logins expose.
+
+MCP is built in. `~/.pi/agent/mcp.json` starts empty so no server is spawned
+until you add one. `pi mcp add <name> -- <command...>` writes that file;
+project servers go in `.pi/mcp.json` after the project is trusted. `/mcp`
+shows what is connected.
+
+`mise run pi` installs pi and downloads the packages. Do not export
+`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, or `XAI_API_KEY` in that shell if you
+want the subscriptions rather than API billing.
 
 ## Layout
 
