@@ -119,6 +119,15 @@ starts the server from `~/.config/systemd/user/tmux.service`. macOS uses a
 LaunchAgent. Herdr's own server is `herdr.service` / a LaunchAgent, and it
 resumes agent panes that have an official integration.
 
+## Claude Code
+
+`mise run claude` installs Claude Code if it is missing and the
+[claude-hud](https://github.com/jarrodwatts/claude-hud) plugin, then points
+the status line at it: model, git branch, context used, and plan usage
+limits under the prompt. It adds only `statusLine` to
+`~/.claude/settings.json`. `/claude-hud:configure` turns on the tools,
+agents, and todo lines.
+
 ## pi
 
 `~/.pi/agent/settings.json` selects the Claude subscription (not an API key)

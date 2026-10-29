@@ -151,6 +151,28 @@ sync_case copied-node "$copy" package.json node_modules/.keep
 sync_case copied-venv "$copy" uv.lock .venv/bin/python
 sync_case uv-fallback "$copy"$'\nuv sync --frozen\nuv sync' uv.lock
 
+# --- claude-hud ------------------------------------------------------------
+ch="$TMP/claude"
+mkdir -p "$ch/bin" "$ch/home/.claude/plugins/cache/claude-hud/claude-hud/1.0.0/scripts"
+# Fake claude: logs its arguments; `list` prints $ch/listed.
+printf '#!/bin/sh\necho "claude $*" >>"%s/log"\ncase "$*" in *list) cat "%s/listed" 2>/dev/null ;; esac\n' \
+  "$ch" "$ch" >"$ch/bin/claude"
+printf '#!/bin/sh\necho "bun $*" >>"%s/log"\n' "$ch" >"$ch/bin/bun"
+chmod +x "$ch/bin"/*
+hud() {
+  : >"$ch/log"
+  HOME="$ch/home" PATH="$ch/bin:$PATH" bash "$ROOT/scripts/tasks.sh" claude >/dev/null
+  sed "s|$ch/home/.claude/plugins/cache/claude-hud/claude-hud/1.0.0/|HUD/|" "$ch/log"
+}
+setup='bun HUD/scripts/setup.mjs install --shell posix'
+expect "claude-hud installs" "claude plugin marketplace list
+claude plugin marketplace add jarrodwatts/claude-hud
+claude plugin list
+claude plugin install claude-hud@claude-hud
+$setup" "$(hud)"
+printf 'claude-hud\nclaude-hud@claude-hud\n' >"$ch/listed"
+expect "claude-hud rerun only runs setup" $'claude plugin marketplace list\nclaude plugin list\n'"$setup" "$(hud)"
+
 # --- default editor --------------------------------------------------------
 python3 -I - "$ROOT/scripts" <<'PY' || fail=1
 import importlib, sys

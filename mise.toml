@@ -94,6 +94,10 @@ run = "bash scripts/tasks.sh herdr"
 description = "Install pi and the Claude, Gemini, Grok, subagent, and herdr packages"
 run = "bash scripts/tasks.sh pi"
 
+[tasks.claude]
+description = "Install Claude Code and the claude-hud status line"
+run = "bash scripts/tasks.sh claude"
+
 [tasks.ssh]
 description = "Public-key-only OpenSSH; Tailscale uses system ssh, not Tailscale SSH"
 run = "bash scripts/tasks.sh ssh"

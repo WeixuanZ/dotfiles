@@ -73,7 +73,7 @@ install_tailscale_daemon() {
     fi
     return 0
   fi
-  if systemctl list-unit-files --no-legend 'tailscaled.service' 2>/dev/null | grep -q tailscaled; then
+  if grep -q tailscaled <<<"$(systemctl list-unit-files --no-legend tailscaled.service 2>/dev/null)"; then
     return 0
   fi
   if [[ -x /usr/sbin/tailscaled || -x /usr/bin/tailscaled ]]; then
@@ -140,22 +140,14 @@ task_update_installfile() {
 
 task_brew_packages() {
   task_brew
-  local filtered
-  filtered="$(mktemp)"
-  modernize_brewfile "$DOTFILES_DIR/install/Brewfile" "$filtered"
-  brew bundle --file "$filtered"
-  rm -f "$filtered"
+  brew_bundle "$DOTFILES_DIR/install/Brewfile"
 }
 
 task_apps() {
   is-macos || die "Not macOS"
   task_brew
   is-brew-package mas || brew install mas
-  local filtered
-  filtered="$(mktemp)"
-  modernize_brewfile "$DOTFILES_DIR/install/Appfile" "$filtered"
-  brew bundle --file "$filtered"
-  rm -f "$filtered"
+  brew_bundle "$DOTFILES_DIR/install/Appfile"
 }
 
 # Zed opens code files from Finder; Syntax Highlight previews them on Space.
@@ -163,7 +155,8 @@ task_apps() {
 task_editor() {
   is-macos || die "Not macOS"
   task_brew
-  brew install --cask zed syntax-highlight
+  is-installed Zed || brew install --cask zed
+  is-installed "Syntax Highlight" || brew install --cask syntax-highlight
   local prefs=com.apple.LaunchServices/com.apple.launchservices.secure
   local tmp
   tmp="$(mktemp -d)"
@@ -181,7 +174,7 @@ task_editor() {
 task_zsh() {
   task_brew
   is-brew-package zsh || brew install zsh
-  ZSH= sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  [[ -d "$HOME/.oh-my-zsh" ]] || ZSH= sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   local custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
   local plugin theme
   local plugins=(
@@ -329,7 +322,7 @@ task_tmux() {
 
 task_alacritty() {
   local font_dir="$HOME/.local/share/fonts/Hack"
-  if ! fc-list 2>/dev/null | grep -qi 'hack'; then
+  if ! grep -qi hack <<<"$(fc-list 2>/dev/null)"; then
     local tmp
     tmp="$(mktemp -d)"
     info "Installing the Hack font into $font_dir"
@@ -423,27 +416,27 @@ task_pi() {
   if command -v herdr >/dev/null 2>&1; then
     herdr integration install pi || warn "herdr integration install pi failed"
   fi
-  cat <<'EOF'
-pi is configured for the Claude, Gemini Pro, and Grok premium subscriptions.
-The default model stays claude-sdk / claude-sonnet-5-5.
+  # shellcheck disable=SC2016
+  ok 'pi ready. Log in with `claude` once, then `/login antigravity` and `/login supergrok` inside pi.'
+}
 
-  claude                 # once, with the Claude Pro/Max account
-  pi                     # then, inside pi:
-  /login antigravity     # Google AI Pro (Gemini). Model id gemini-4-argon
-  /login supergrok       # SuperGrok or X Premium+. Do not export XAI_API_KEY
-  /gemini                # switch this session to Gemini 4
-  /opus                  # switch this session to Claude Opus 5.5
-  /mcp                   # built-in MCP. `pi mcp add` writes ~/.pi/agent/mcp.json
-
-Do not export ANTHROPIC_API_KEY, GEMINI_API_KEY, or XAI_API_KEY in that shell
-if you want plan billing. An API key set for other tools is still an API key.
-
-From zsh, `pi --wt <branch>` and `pi --wt-new <branch>` run pi inside a
-worktrunk. pre-start copies gitignored deps and installs the rest.
-
-Subagents (@tintinweb/pi-subagents) run in the background by default, up to
-8 at once. Inside herdr, @ogulcancelik/pi-herdr adds the herdr tool.
-EOF
+# Claude Code with the claude-hud status line (context, usage, tools, agents).
+# setup.mjs adds only `statusLine` to ~/.claude/settings.json, through a
+# launcher that runs the newest installed claude-hud, so updates need no rerun.
+task_claude() {
+  if ! command -v claude >/dev/null 2>&1; then
+    curl -fsSL https://claude.ai/install.sh | bash
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
+  grep -q claude-hud <<<"$(claude plugin marketplace list)" \
+    || claude plugin marketplace add jarrodwatts/claude-hud
+  grep -q claude-hud@claude-hud <<<"$(claude plugin list)" \
+    || claude plugin install claude-hud@claude-hud
+  local runtime root
+  runtime="$(command -v bun || command -v node)" || die "claude-hud needs Node.js. Run: mise run tools"
+  root="$(ls -td "$HOME"/.claude/plugins/cache/claude-hud/claude-hud/*/)"
+  "$runtime" "${root%%$'\n'*}scripts/setup.mjs" install --shell posix
+  ok "claude-hud is the Claude Code status line. Customize with /claude-hud:configure"
 }
 
 usage() {
@@ -475,6 +468,7 @@ main() {
     alacritty) task_alacritty ;;
     herdr) task_herdr ;;
     pi) task_pi ;;
+    claude) task_claude ;;
     ssh) task_ssh ;;
     ""|-h|--help|help) usage ;;
     *) die "unknown task: $cmd" ;;

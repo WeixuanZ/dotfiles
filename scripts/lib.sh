@@ -80,3 +80,11 @@ modernize_brewfile() {
     printf '%s\n' "$line" >>"$dest"
   done <"$src"
 }
+
+brew_bundle() {
+  local filtered
+  filtered="$(mktemp)"
+  modernize_brewfile "$1" "$filtered"
+  brew bundle --file "$filtered"
+  rm -f "$filtered"
+}
