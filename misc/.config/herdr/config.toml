@@ -51,12 +51,13 @@ split_horizontal = ["prefix+shift+h", "prefix+minus"]
 close_pane = "prefix+x"
 zoom = "prefix+z"
 
-# tmux: prefix h/j/k/l and Ctrl-h/j/k/l (vim-aware in tmux; both chords here).
-# prefix+ctrl+* covers the case where Ctrl is still held after the prefix.
-focus_pane_left = ["prefix+h", "ctrl+h", "prefix+ctrl+h"]
-focus_pane_down = ["prefix+j", "ctrl+j", "prefix+ctrl+j"]
-focus_pane_up = ["prefix+k", "ctrl+k", "prefix+ctrl+k"]
-focus_pane_right = ["prefix+l", "ctrl+l", "prefix+ctrl+l"]
+# tmux: prefix h/j/k/l. Bare Ctrl-h/j/k/l is left to the pane: herdr cannot
+# tell vim is running the way tmux's binding does. prefix+ctrl+* covers Ctrl
+# still held after the prefix.
+focus_pane_left = ["prefix+h", "prefix+ctrl+h"]
+focus_pane_down = ["prefix+j", "prefix+ctrl+j"]
+focus_pane_up = ["prefix+k", "prefix+ctrl+k"]
+focus_pane_right = ["prefix+l", "prefix+ctrl+l"]
 
 # tmux prefix+q was display-panes. Herdr has no pane-number overlay;
 # prefix+g is the goto chooser. prefix+q detaches, and so does tmux's prefix+d.

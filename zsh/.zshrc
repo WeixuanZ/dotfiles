@@ -87,7 +87,7 @@ plugins=(
   zsh-syntax-highlighting
 )
 # macOS-only oh-my-zsh plugins. Loading them on Linux just prints errors.
-[[ "$OSTYPE" == darwin* ]] && plugins+=(macos sublime)
+[[ "$OSTYPE" == darwin* ]] && plugins+=(macos)
 
 
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
@@ -164,17 +164,9 @@ pi() {
     print -u2 "worktrunk (wt) is not installed. Run: mise run init"
     return 127
   fi
-  if [[ "$mode" == "--wt-new" ]]; then
-    if (( $# )); then
-      wt switch --create "$branch" -x pi -- "$@"
-    else
-      wt switch --create "$branch" -x pi
-    fi
-  elif (( $# )); then
-    wt switch "$branch" -x pi -- "$@"
-  else
-    wt switch "$branch" -x pi
-  fi
+  local create=()
+  [[ "$mode" == "--wt-new" ]] && create=(--create)
+  wt switch "${create[@]}" "$branch" -x pi ${@:+--} "$@"
 }
 
 

@@ -147,34 +147,35 @@ task_brew_packages() {
   rm -f "$filtered"
 }
 
-task_python_packages() {
-  # Kept as a name. The global pip freeze in install/Pythonfile is not installed.
-  task_tools
-}
-
-task_node_packages() {
-  # Kept as a name. install/Nodefile is not passed to npm install -g.
-  task_tools
-}
-
-task_packages() {
-  task_tools
-  task_brew_packages
-}
-
 task_apps() {
   is-macos || die "Not macOS"
   task_brew
-  local quicklook="$HOME/Library/QuickLook"
   is-brew-package mas || brew install mas
   local filtered
   filtered="$(mktemp)"
   modernize_brewfile "$DOTFILES_DIR/install/Appfile" "$filtered"
   brew bundle --file "$filtered"
   rm -f "$filtered"
-  if [[ -d "$quicklook" ]]; then
-    xattr -d -r com.apple.quarantine "$quicklook" || true
-  fi
+}
+
+# Zed opens code files from Finder; Syntax Highlight previews them on Space.
+# Zed's config is misc/.config/zed, linked by `mise run link`.
+task_editor() {
+  is-macos || die "Not macOS"
+  task_brew
+  brew install --cask zed syntax-highlight
+  local prefs=com.apple.LaunchServices/com.apple.launchservices.secure
+  local tmp
+  tmp="$(mktemp -d)"
+  defaults export "$prefs" "$tmp/old.plist"
+  python3 -I "$DOTFILES_DIR/scripts/default-editor.py" dev.zed.Zed <"$tmp/old.plist" >"$tmp/new.plist"
+  defaults import "$prefs" "$tmp/new.plist"
+  rm -rf "$tmp"
+  killall lsd 2>/dev/null || true
+  pluginkit -a "/Applications/Syntax Highlight.app/Contents/PlugIns/Syntax Highlight Quick Look Extension.appex"
+  pluginkit -e use -i org.sbarex.SourceCodeSyntaxHighlight.QuickLookExtension
+  qlmanage -r >/dev/null
+  ok "Zed opens code files; Space previews them with syntax highlighting"
 }
 
 task_zsh() {
@@ -460,11 +461,10 @@ main() {
     brew) task_brew ;;
     update-brewfile) task_update_brewfile ;;
     update-installfile) task_update_installfile ;;
+    tools) task_tools ;;
     brew-packages) task_brew_packages ;;
-    python-packages) task_python_packages ;;
-    node-packages) task_node_packages ;;
-    packages|init|install) task_packages ;;
     apps) task_apps ;;
+    editor) task_editor ;;
     zsh) task_zsh ;;
     vim) task_vim ;;
     vim-ycm) task_vim_ycm ;;

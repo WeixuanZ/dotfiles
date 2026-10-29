@@ -1,7 +1,6 @@
 [Unit]
 Description=tmux server (continuum restores the last session)
 Documentation=file://%h/.tmux.conf
-After=default.target
 
 [Service]
 Type=oneshot

@@ -38,16 +38,16 @@ cask "onyx"
 cask "openinterminal-lite"
 cask "pock"
 cask "postman"
-cask "qlcolorcode"
-cask "qlstephen"
 cask "react-native-debugger"
 cask "signal"
 cask "skim"
 cask "skype"
 cask "syncalicious"
+cask "syntax-highlight"
 cask "thunderbird"
 cask "tikzit"
 cask "vnc-viewer"
+cask "zed"
 mas "AdGuard for Safari", id: 1440147259
 mas "circuitlatex", id: 1200311322
 mas "DaVinci Resolve", id: 571213070

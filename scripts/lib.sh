@@ -9,7 +9,6 @@ fi
 export PATH="$DOTFILES_DIR/bin:$PATH"
 
 COM_COLOR=$'\033[0;34m'
-OBJ_COLOR=$'\033[0;36m'
 OK_COLOR=$'\033[0;32m'
 ERROR_COLOR=$'\033[0;31m'
 WARN_COLOR=$'\033[0;33m'
@@ -51,7 +50,8 @@ install_launch_agent() {
   mkdir -p "$HOME/Library/LaunchAgents"
   cp "$src" "$dest"
   if command -v launchctl >/dev/null 2>&1; then
-    local domain="gui/$(id -u)"
+    local domain
+    domain="gui/$(id -u)"
     launchctl bootout "$domain" "$dest" >/dev/null 2>&1 || true
     launchctl bootstrap "$domain" "$dest" || warn "launchctl bootstrap failed for $label"
   fi

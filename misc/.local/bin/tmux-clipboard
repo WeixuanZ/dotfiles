@@ -45,25 +45,16 @@ copy_local() {
   return 1
 }
 
-# Write OSC 52 where the attached terminal can see it.
+# Write OSC 52 to stdout and, inside tmux, DCS-wrapped to every client tty
+# so tmux passes it through to the outer terminal.
 osc52() {
-  payload=$(printf '\033]52;c;%s\a' "$b64")
   if [ -n "${TMUX:-}" ] && command -v tmux >/dev/null 2>&1; then
-    # DCS-wrap so tmux passes the sequence through to the host terminal.
     wrapped=$(printf '\033Ptmux;\033\033]52;c;%s\a\033\\' "$b64")
-    wrote=0
     tmux list-clients -F '#{client_tty}' 2>/dev/null | while IFS= read -r tty; do
-      if [ -n "$tty" ] && [ -w "$tty" ]; then
-        printf '%s' "$wrapped" > "$tty"
-      fi
-    done && wrote=1
-    # `wrote` is unreliable across the pipeline subshell; also print, so a
-    # caller that captured stdout (tests, a terminal with no client list)
-    # still observes the sequence.
-    printf '%s' "$payload"
-    return 0
+      if [ -w "$tty" ]; then printf '%s' "$wrapped" >"$tty"; fi
+    done
   fi
-  printf '%s' "$payload"
+  printf '\033]52;c;%s\a' "$b64"
 }
 
 if ! copy_local; then

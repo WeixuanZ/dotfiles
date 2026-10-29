@@ -35,7 +35,7 @@ and does not install a global pip or npm dump.
 | What you used to get | What init does now |
 | --- | --- |
 | Homebrew `python@3.9`, `node@16`, `pyenv`, `go`, `openjdk@8` | mise: Node LTS, Python 3.14, Go, Java LTS |
-| `pip3 install -r install/Pythonfile` | `uv tool install` from `install/uv-tools.txt` (ruff, pre-commit, ipython, pynvim). The old freeze is kept but not installed. |
+| `pip3 install -r install/Pythonfile` | `uv tool install` from `install/uv-tools.txt` (ruff, pre-commit, ipython, pynvim). |
 | `npm install -g` create-react-app, expo-cli, eslint, prettier, typescript | mise npm tools: typescript, prettier, eslint. pnpm and yarn come from corepack. Abandoned global CLIs are not installed. |
 | `exa`, `youtube-dl`, `thefuck` | `eza`, `yt-dlp`, `pay-respects` (the `fuck` alias still works; thefuck is used if it is already installed) |
 | `gh` was already in the Brewfile | mise also installs `gh`, plus `worktrunk` and the Tailscale CLI |
@@ -84,6 +84,16 @@ been turned off yet, then run `mise run ssh` again.
 pi --wt feature-a              # existing branch, then pi in that worktree
 pi --wt-new feature-a 'prompt' # create the branch and worktree, then pi
 ```
+
+## Editor
+
+`misc/.config/zed` is Zed in vim mode, with `vim/.vimrc`'s options and
+leader (Space) bindings mapped to Zed actions. On macOS, `mise run editor`
+installs Zed and [Syntax Highlight](https://github.com/sbarex/SourceCodeSyntaxHighlight),
+makes Zed the app Finder opens code and text files with, and turns on
+syntax-highlighted Quick Look previews (Space in Finder). No confirmation
+dialogs: `scripts/default-editor.py` writes the LaunchServices handlers
+directly, for both the file type and the extension.
 
 ## Terminal
 
