@@ -3,62 +3,6 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-install_uv_tools() {
-  local file="$DOTFILES_DIR/install/uv-tools.txt"
-  local line
-  [[ -f "$file" ]] || die "missing $file"
-  command -v uv >/dev/null 2>&1 || die "uv is not on PATH. Run: mise run init"
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line="${line%%#*}"
-    line="${line#"${line%%[![:space:]]*}"}"
-    line="${line%"${line##*[![:space:]]}"}"
-    [[ -z "$line" ]] && continue
-    info "uv tool install $line"
-    # The line is a package name plus optional `uv tool install` arguments.
-    # shellcheck disable=SC2086
-    uv tool install $line
-  done <"$file"
-}
-
-# Language runtimes and the CLIs that replaced brew's abandoned formulae.
-# Installed into the global mise config so a new shell can see them, not only
-# this task. Python CLIs are uv tools (isolated). JS CLIs are mise npm tools,
-# not `npm install -g`.
-DEV_TOOLS=(
-  node@lts
-  python@3.14
-  go@1
-  java@lts
-  uv@latest
-  eza@latest
-  yt-dlp@latest
-  aqua:iffse/pay-respects@latest
-  npm:typescript@latest
-  npm:prettier@latest
-  npm:eslint@latest
-  gh@latest
-  worktrunk@latest
-  aqua:tailscale/tailscale@latest
-)
-
-task_tools() {
-  info "Installing dev tools into ~/.config/mise/config.toml"
-  MISE_YES=1 mise use -g "${DEV_TOOLS[@]}"
-  hash -r || true
-  # This process started before those shims existed.
-  eval "$(mise activate bash)"
-  if command -v corepack >/dev/null 2>&1; then
-    corepack enable || warn "corepack enable failed"
-    corepack prepare pnpm@latest --activate || warn "could not activate pnpm via corepack"
-    corepack prepare yarn@stable --activate || warn "could not activate yarn via corepack"
-  else
-    warn "corepack is not on this node; pnpm and yarn were not activated"
-  fi
-  install_uv_tools
-  install_tailscale_daemon
-  ok "dev tools ready: node $(node --version), python $(python --version)"
-}
-
 # The mise package is the CLI. The tunnel is a system daemon: the Mac app, or
 # tailscaled from the distro package. Tailscale SSH stays off; system sshd
 # owns port 22, including on the tailnet address (`mise run ssh`).
@@ -117,37 +61,34 @@ task_brew() {
   fi
 }
 
-task_update_brewfile() {
-  task_brew
-  local dump raw_brew raw_app
-  dump="$(mktemp)"
-  raw_brew="$(mktemp)"
-  raw_app="$(mktemp)"
-  (cd "$DOTFILES_DIR" && brew bundle dump --force --file "$dump")
-  grep -E '^(tap|brew)[[:space:]]' "$dump" >"$raw_brew" || true
-  grep -E '^(tap|cask|mas)[[:space:]]' "$dump" >"$raw_app" || true
-  modernize_brewfile "$raw_brew" "$DOTFILES_DIR/install/Brewfile"
-  modernize_brewfile "$raw_app" "$DOTFILES_DIR/install/Appfile"
-  echo '# vim: syntax=brewfile' >>"$DOTFILES_DIR/install/Appfile"
-  rm -f "$dump" "$raw_brew" "$raw_app"
-}
-
-task_update_installfile() {
-  command -v uv >/dev/null 2>&1 || die "uv is not on PATH. Run: mise run init"
-  info "Installed uv tools (edit install/uv-tools.txt by hand; a dump would drop --with flags):"
-  uv tool list
+# Dev tools are declared in misc/.config/mise/config.toml (~/.config/mise).
+task_tools() {
+  mise install
+  install_tailscale_daemon
 }
 
 task_brew_packages() {
   task_brew
-  brew_bundle "$DOTFILES_DIR/install/Brewfile"
+  brew bundle --file "$DOTFILES_DIR/install/Brewfile"
 }
 
 task_apps() {
   is-macos || die "Not macOS"
   task_brew
-  is-brew-package mas || brew install mas
-  brew_bundle "$DOTFILES_DIR/install/Appfile"
+  brew bundle --file "$DOTFILES_DIR/install/Appfile"
+}
+
+# The lists are curated by hand. This shows how this machine differs from them.
+task_brew_check() {
+  local all
+  all="$(mktemp)"
+  cat "$DOTFILES_DIR/install/Brewfile" >"$all"
+  is-macos && cat "$DOTFILES_DIR/install/Appfile" >>"$all"
+  info "Listed but not installed:"
+  brew bundle check --verbose --no-upgrade --file "$all" || true
+  info "Installed but not listed (add them, or remove with --force):"
+  brew bundle cleanup --file "$all" || true
+  rm -f "$all"
 }
 
 # Zed opens code files from Finder; Syntax Highlight previews them on Space.
@@ -299,7 +240,7 @@ task_tmux() {
     if is-executable brew; then
       brew install tmux
     else
-      die "tmux is not installed. On Linux: mise use -g tmux@3.7c, or your distro package."
+      die "tmux is not installed. Run: mise run link && mise install"
     fi
   fi
   local tpm="$HOME/.tmux/plugins/tpm"
@@ -452,8 +393,7 @@ main() {
   case "$cmd" in
     link) task_link ;;
     brew) task_brew ;;
-    update-brewfile) task_update_brewfile ;;
-    update-installfile) task_update_installfile ;;
+    brew-check) task_brew_check ;;
     tools) task_tools ;;
     brew-packages) task_brew_packages ;;
     apps) task_apps ;;

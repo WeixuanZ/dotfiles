@@ -1,8 +1,0 @@
-# Python CLIs for `mise run init`. One `uv tool install` invocation per line.
-# Words after the name are extra arguments (kept so this is not a pip freeze).
-# Libraries such as numpy belong in a project (`uv add`), not in this list.
-ruff
-pre-commit
-ipython
-pynvim
-neovim-remote

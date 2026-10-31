@@ -56,35 +56,3 @@ install_launch_agent() {
     launchctl bootstrap "$domain" "$dest" || warn "launchctl bootstrap failed for $label"
   fi
 }
-
-# Homebrew taps that are built in now, and formulae this repo installs with mise
-# instead (or that Homebrew has removed). `brew bundle` fails the whole install
-# if any one of these is still listed.
-modernize_brewfile() {
-  local src="$1" dest="$2"
-  local line name base
-  : >"$dest"
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    if [[ "$line" =~ ^tap[[:space:]]+\"homebrew/(bundle|cask|core|services)\" ]]; then
-      continue
-    fi
-    if [[ "$line" =~ ^brew[[:space:]]+\"([^\"]+)\" ]]; then
-      name="${BASH_REMATCH[1]}"
-      base="${name##*/}"
-      case "$base" in
-        python@3.[0-9]* | node | node@* | pyenv | pypy | pypy3 | go | yarn | thefuck | exa | youtube-dl | openjdk | openjdk@*)
-          continue
-          ;;
-      esac
-    fi
-    printf '%s\n' "$line" >>"$dest"
-  done <"$src"
-}
-
-brew_bundle() {
-  local filtered
-  filtered="$(mktemp)"
-  modernize_brewfile "$1" "$filtered"
-  brew bundle --file "$filtered"
-  rm -f "$filtered"
-}

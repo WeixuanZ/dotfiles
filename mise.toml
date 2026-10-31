@@ -1,54 +1,42 @@
-# Task runner for these dotfiles. `mise run` links configs into $HOME.
-# `mise tasks` lists everything the Makefile used to expose, plus the
-# Linux terminal stack (tmux, alacritty, herdr, pi).
-
-[tools]
-tmux = "3.7c"
-
-[tasks.default]
-description = "Link all tracked dotfiles into $HOME"
-depends = ["link"]
-run = "true"
+# Tasks for these dotfiles. `mise run` links configs into $HOME; `mise tasks`
+# lists the rest. What gets installed is declared in three files:
+#   misc/.config/mise/config.toml   dev toolchains and CLIs (macOS and Linux)
+#   install/Brewfile                Homebrew command-line packages
+#   install/Appfile                 macOS apps (casks and App Store)
 
 [tasks.link]
 description = "Link all tracked dotfiles into $HOME"
+alias = "default"
 run = "bash scripts/tasks.sh link"
 
-[tasks.help]
-description = "List tasks"
-run = "mise tasks"
+[tasks.tools]
+description = "Install the dev tools in ~/.config/mise/config.toml, and Tailscale"
+alias = ["python-packages", "node-packages"]
+depends = ["link"]
+run = "bash scripts/tasks.sh tools"
 
 [tasks.brew]
 description = "Install Homebrew (Linuxbrew on Linux)"
 run = "bash scripts/tasks.sh brew"
 
-[tasks.update-brewfile]
-description = "Rewrite install/Brewfile and install/Appfile from the current machine"
-depends = ["brew"]
-run = "bash scripts/tasks.sh update-brewfile"
-
-[tasks.update-installfile]
-description = "Show uv tools. Edit install/uv-tools.txt by hand"
-run = "bash scripts/tasks.sh update-installfile"
-
-[tasks.tools]
-description = "Install language toolchains and dev CLIs with mise and uv"
-alias = ["python-packages", "node-packages"]
-run = "bash scripts/tasks.sh tools"
-
 [tasks.brew-packages]
 description = "Install Homebrew packages from install/Brewfile"
 run = "bash scripts/tasks.sh brew-packages"
 
+[tasks.apps]
+description = "Install macOS apps from install/Appfile"
+run = "bash scripts/tasks.sh apps"
+
+[tasks.brew-check]
+description = "Show how this machine differs from install/Brewfile and install/Appfile"
+alias = "update-brewfile"
+run = "bash scripts/tasks.sh brew-check"
+
 [tasks.init]
-description = "Install dev toolchains, uv tools, Homebrew packages, and SSH"
+description = "Install dev tools, Homebrew packages, and SSH"
 alias = ["install", "packages"]
 depends = ["tools", "brew-packages", "ssh"]
 run = "true"
-
-[tasks.apps]
-description = "Install macOS casks and Mac App Store apps from install/Appfile"
-run = "bash scripts/tasks.sh apps"
 
 [tasks.editor]
 description = "Zed as the default editor for code files, and Quick Look previews (macOS)"

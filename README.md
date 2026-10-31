@@ -26,29 +26,30 @@ That links configs, installs zsh, tmux (resurrect + continuum), the Hack
 font, herdr, and the pi coding agent. iTerm2 and Hammerspoon stay macOS-only
 (`mise run iterm2`, `mise run hammerspoon`).
 
-## Dev tools
+## What gets installed
 
-`mise run init` (also `mise run install`, or `mise run packages`) is the
-machine setup for compilers and CLIs. It writes `~/.config/mise/config.toml`
-and does not install a global pip or npm dump.
+Three hand-written lists, top-level packages only:
 
-| What you used to get | What init does now |
-| --- | --- |
-| Homebrew `python@3.9`, `node@16`, `pyenv`, `go`, `openjdk@8` | mise: Node LTS, Python 3.14, Go, Java LTS |
-| `pip3 install -r install/Pythonfile` | `uv tool install` from `install/uv-tools.txt` (ruff, pre-commit, ipython, pynvim). |
-| `npm install -g` create-react-app, expo-cli, eslint, prettier, typescript | mise npm tools: typescript, prettier, eslint. pnpm and yarn come from corepack. Abandoned global CLIs are not installed. |
-| `exa`, `youtube-dl`, `thefuck` | `eza`, `yt-dlp`, `pay-respects` (the `fuck` alias still works; thefuck is used if it is already installed) |
-| `gh` was already in the Brewfile | mise also installs `gh`, plus `worktrunk` and the Tailscale CLI |
+| File | Installs | Task |
+| --- | --- | --- |
+| `misc/.config/mise/config.toml` | Dev toolchains and CLIs on macOS and Linux: Node, Python, Go, Java, uv, pnpm, yarn, gh, terraform, ruff, prettier, ... | `mise run tools` |
+| `install/Brewfile` | Homebrew command-line packages | `mise run brew-packages` |
+| `install/Appfile` | macOS casks and App Store apps | `mise run apps` |
 
-Homebrew still installs the rest of `install/Brewfile`. Built-in taps
-(`homebrew/core`, `homebrew/cask`, and the rest) are skipped, because tapping
-them fails on current Homebrew. `mise run haskell` is separate: one
-noninteractive GHCup bootstrap for GHC, Cabal, Stack, and HLS.
+`mise run init` (alias `install`) runs the first two and `mise run ssh`.
+The mise file is linked to `~/.config/mise/config.toml`, so `mise use -g`
+edits it in place. `mise run brew-check` lists what this machine has that the
+Homebrew lists do not, and the reverse. `mise run haskell` is a separate
+GHCup bootstrap for GHC, Cabal, Stack, and HLS.
 
-The Tailscale CLI from mise does not start the tunnel. On macOS, init
-installs the Tailscale cask (or use the Mac app). On Linux it installs the
-distro `tailscaled` when that service is missing. Then `sudo tailscale up`.
-Open a new shell after init so `mise activate` in `.zshrc` picks up the shims.
+The Tailscale CLI from mise does not start the tunnel. On macOS, `tools`
+installs the Tailscale cask; on Linux, the distro `tailscaled`. Then
+`sudo tailscale up`. Open a new shell after `init` so `mise activate` in
+`.zshrc` picks up the tools.
+
+Machine-specific settings stay out of the repo, in files the tracked configs
+include: `~/.gitconfig.local` (name, email, signing key) and
+`~/.ssh/config.local` (hosts).
 
 ## SSH and Tailscale
 

@@ -60,7 +60,7 @@ LINK_HOME="$TMP/home"
 HOME="$LINK_HOME" bash "$ROOT/scripts/tasks.sh" link >/dev/null
 for path in .gitconfig .zshrc .vimrc .tmux.conf .ssh/config \
   .config/herdr/config.toml .config/alacritty/alacritty.toml \
-  .config/systemd/user/tmux.service .config/zed/settings.json \
+  .config/systemd/user/tmux.service .config/zed/settings.json .config/mise/config.toml \
   .config/zed/keymap.json .config/worktrunk/config.toml \
   .local/bin/tmux-clipboard .local/bin/wt-sync-deps .pi/agent/settings.json; do
   check "link $path" test -L "$LINK_HOME/$path"
@@ -103,20 +103,15 @@ else
   expect "no display: no local tool" "" "$(used)"
 fi
 
-# --- Brewfile filter -------------------------------------------------------
-printf '%s\n' 'tap "homebrew/core"' 'tap "heroku/brew"' 'brew "node@16"' \
-  'brew "python@3.10"' 'brew "exa"' 'brew "ripgrep"' 'cask "iterm2"' >"$TMP/Brewfile"
-(source "$ROOT/scripts/lib.sh" && modernize_brewfile "$TMP/Brewfile" "$TMP/Brewfile.out")
-expect "brewfile filter" $'tap "heroku/brew"\nbrew "ripgrep"\ncask "iterm2"' "$(cat "$TMP/Brewfile.out")"
-
-# --- uv tools --------------------------------------------------------------
-mkdir -p "$TMP/uv/bin" "$TMP/uv/install"
-printf '#!/bin/sh\necho "$*" >>"%s/uv.log"\n' "$TMP" >"$TMP/uv/bin/uv"
-chmod +x "$TMP/uv/bin/uv"
-printf '# comment\nruff\njupyterlab --with numpy  # trailing\n\n' >"$TMP/uv/install/uv-tools.txt"
-PATH="$TMP/uv/bin:$PATH" DOTFILES_DIR="$TMP/uv" bash -c 'source "$1"; install_uv_tools' _ \
-  "$ROOT/scripts/tasks.sh" >/dev/null
-expect "uv tool lines" $'tool install ruff\ntool install jupyterlab --with numpy' "$(cat "$TMP/uv.log")"
+# --- Homebrew lists --------------------------------------------------------
+if command -v brew >/dev/null 2>&1; then
+  # shellcheck disable=SC2317 # called through check
+  parses() { brew bundle list --all --file "$1" >/dev/null; }
+  check "Brewfile parses" parses "$ROOT/install/Brewfile"
+  if [[ "$(uname -s)" == Darwin ]]; then check "Appfile parses" parses "$ROOT/install/Appfile"; fi
+else
+  printf 'skip Homebrew lists (brew not installed)\n'
+fi
 
 # --- wt-sync-deps ----------------------------------------------------------
 sbin="$TMP/sync-bin"
@@ -213,6 +208,7 @@ if command -v herdr >/dev/null 2>&1; then
   pid=$!
   sleep 1
   log="$LINK_HOME/.config/herdr/herdr-server.log"
+  # shellcheck disable=SC2016
   check "herdr accepts its config" bash -c \
     'grep -q "herdr server started" "$1" && ! grep -Eiq "unknown key|invalid|error parsing" "$1" "$2"' \
     _ "$log" "$TMP/herdr.err"

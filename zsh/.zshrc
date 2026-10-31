@@ -219,7 +219,7 @@ fi
 HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
 
 # Google Cloud SDK autocomplete (macOS cask path; absent on Linux)
-_gcloud_completion="/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
+_gcloud_completion="${HOMEBREW_PREFIX:-/usr/local}/Caskroom/gcloud-cli/latest/google-cloud-sdk/completion.zsh.inc"
 [[ -r "$_gcloud_completion" ]] && source "$_gcloud_completion"
 unset _gcloud_completion
 
