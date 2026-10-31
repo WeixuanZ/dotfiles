@@ -92,3 +92,11 @@
     process = git-lfs filter-process
     required = true
 
+
+# Identity and signing key: ~/.gitconfig.local (not tracked), e.g.
+#   [user]
+#       name = Your Name
+#       email = you@example.com
+#       signingkey = <key id>
+[include]
+    path = ~/.gitconfig.local

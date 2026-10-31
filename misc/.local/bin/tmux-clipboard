@@ -1,0 +1,66 @@
+#!/bin/sh
+# Copy tmux's selection to the clipboard the user is actually looking at.
+#
+#   macOS, local        pbcopy
+#   Linux Wayland       wl-copy
+#   Linux X11           xclip, else xsel
+#   SSH, or no display  OSC 52 to the outer terminal (Alacritty, iTerm, ...)
+#
+# Inside tmux the bytes are written to each client tty. tmux would otherwise
+# swallow a raw OSC 52 printed by a copy-pipe. `set -g set-clipboard on` in
+# tmux.conf also emits OSC 52; doing it here as well is harmless and covers
+# terminals whose terminfo has no Ms capability.
+set -eu
+
+data=$(cat)
+# GNU base64 wraps at 76 columns; OSC 52 payloads must be one line.
+b64=$(printf '%s' "$data" | base64 | tr -d '\n\r')
+
+on_ssh() {
+  [ -n "${SSH_CONNECTION:-}${SSH_TTY:-}" ]
+}
+
+copy_local() {
+  if on_ssh; then
+    return 1
+  fi
+  uname_s=$(uname -s)
+  if [ "$uname_s" = "Darwin" ] && command -v pbcopy >/dev/null 2>&1; then
+    printf '%s' "$data" | pbcopy
+    return 0
+  fi
+  if [ -n "${WAYLAND_DISPLAY:-}" ] && command -v wl-copy >/dev/null 2>&1; then
+    # Do not pass --foreground: that would block the tmux copy-pipe.
+    printf '%s' "$data" | wl-copy --type text/plain
+    return 0
+  fi
+  if [ -n "${DISPLAY:-}" ] && command -v xclip >/dev/null 2>&1; then
+    printf '%s' "$data" | xclip -selection clipboard -i
+    return 0
+  fi
+  if [ -n "${DISPLAY:-}" ] && command -v xsel >/dev/null 2>&1; then
+    printf '%s' "$data" | xsel --clipboard --input
+    return 0
+  fi
+  return 1
+}
+
+# Write OSC 52 to stdout and, inside tmux, DCS-wrapped to every client tty
+# so tmux passes it through to the outer terminal.
+osc52() {
+  if [ -n "${TMUX:-}" ] && command -v tmux >/dev/null 2>&1; then
+    wrapped=$(printf '\033Ptmux;\033\033]52;c;%s\a\033\\' "$b64")
+    tmux list-clients -F '#{client_tty}' 2>/dev/null | while IFS= read -r tty; do
+      if [ -w "$tty" ]; then printf '%s' "$wrapped" >"$tty"; fi
+    done
+  fi
+  printf '\033]52;c;%s\a' "$b64"
+}
+
+if ! copy_local; then
+  osc52
+elif [ -n "${TMUX:-}" ] || on_ssh; then
+  # Local copy succeeded, but an SSH client attached to this tmux still
+  # needs OSC 52 to update the laptop clipboard.
+  osc52
+fi

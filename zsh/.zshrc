@@ -3,6 +3,7 @@
 
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
+export PATH="$HOME/.local/bin:$PATH"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -73,7 +74,20 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
 
-plugins=(fzf-tab zsh-vi-mode z zsh-autosuggestions sublime macos git colored-man-pages autoswitch_virtualenv docker docker-compose zsh-syntax-highlighting)
+plugins=(
+  fzf-tab
+  zsh-vi-mode
+  z
+  zsh-autosuggestions
+  git
+  colored-man-pages
+  autoswitch_virtualenv
+  docker
+  docker-compose
+  zsh-syntax-highlighting
+)
+# macOS-only oh-my-zsh plugins. Loading them on Linux just prints errors.
+[[ "$OSTYPE" == darwin* ]] && plugins+=(macos)
 
 
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
@@ -104,7 +118,8 @@ zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
 
 # fzf-tab
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+# eza replaced exa. Fall back for a machine that has not run `mise run init`.
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'command eza -1 --color=always $realpath || command exa -1 --color=always $realpath || command ls -1 --color=auto $realpath'
 zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
     fzf-preview 'echo ${(P)word}'
 zstyle ':fzf-tab:complete:(\\|*/|)man:*' fzf-preview 'man $word'
@@ -114,6 +129,45 @@ zstyle ':fzf-tab:complete:(\\|*/|)man:*' fzf-preview 'man $word'
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 
 source $ZSH/oh-my-zsh.sh
+
+# mise (task runner and, when used, tool versions). Installed by `mise run`.
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+elif [[ -x "$HOME/.local/bin/mise" ]]; then
+  eval "$("$HOME/.local/bin/mise" activate zsh)"
+fi
+
+# worktrunk's shell hook is what cds the current shell on `wt switch`.
+# `pi --wt` calls that function, so the hook has to be installed first.
+if command -v wt >/dev/null 2>&1; then
+  eval "$(wt config shell init zsh)"
+fi
+
+# pi --wt <branch> [args...]       worktree for an existing branch, then pi
+# pi --wt-new <branch> [args...]   create the branch and worktree, then pi
+# Anything else is the real pi binary.
+pi() {
+  local mode="${1:-}"
+  if [[ "$mode" != "--wt-new" && "$mode" != "--wt" ]]; then
+    command pi "$@"
+    return
+  fi
+  shift
+  local branch="${1:-}"
+  if [[ -z "$branch" || "$branch" == -* ]]; then
+    print -u2 "usage: pi --wt-new <branch> [pi args...]"
+    print -u2 "       pi --wt <branch> [pi args...]"
+    return 2
+  fi
+  shift
+  if ! command -v wt >/dev/null 2>&1; then
+    print -u2 "worktrunk (wt) is not installed. Run: mise run init"
+    return 127
+  fi
+  local create=()
+  [[ "$mode" == "--wt-new" ]] && create=(--create)
+  wt switch "${create[@]}" "$branch" -x pi ${@:+--} "$@"
+}
 
 
 # -----------------------------------------------------------------------------
@@ -153,13 +207,21 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools
 # Tikzit
 export PATH="$PATH:/Applications/TikZiT.app/Contents/MacOS"
 
-eval $(thefuck --alias)
+# pay-respects replaces thefuck. Keep thefuck if that is what this machine has.
+# The alias stays `fuck`, which is what `thefuck --alias` used to bind.
+if command -v pay-respects >/dev/null 2>&1; then
+  eval "$(pay-respects zsh --alias fuck)"
+elif command -v thefuck >/dev/null 2>&1; then
+  eval "$(thefuck --alias)"
+fi
 
 # Heroku autocomplete setup
 HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
 
-# Google Cloud SDK autocomplete
-source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
+# Google Cloud SDK autocomplete (macOS cask path; absent on Linux)
+_gcloud_completion="${HOMEBREW_PREFIX:-/usr/local}/Caskroom/gcloud-cli/latest/google-cloud-sdk/completion.zsh.inc"
+[[ -r "$_gcloud_completion" ]] && source "$_gcloud_completion"
+unset _gcloud_completion
 
 
 # -----------------------------------------------------------------------------
@@ -209,4 +271,17 @@ function z {
     [ $# -gt 0 ] && _z "$*" && return
     cd "$(_z -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
 }
+
+# herdr completions, when the binary is installed.
+if command -v herdr >/dev/null 2>&1; then
+  eval "$(herdr completion zsh)"
+fi
+
+# Keep a tmux server alive so continuum can restore after a reboot. Do not
+# attach: Alacritty attaches the herdr session "main". Skip inside tmux,
+# inside herdr, and in non-interactive shells (scp, scripts).
+if [[ -o interactive ]] && command -v tmux >/dev/null 2>&1 \
+    && [[ -z ${TMUX:-} && -z ${HERDR_ENV:-} ]]; then
+  tmux start-server 2>/dev/null || true
+fi
 

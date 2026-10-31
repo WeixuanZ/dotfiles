@@ -1,0 +1,69 @@
+# Linux terminal. Colours are the iTerm2 "monokai_tasty" preset
+# (iterm2/com.googlecode.iterm2.plist). Font is Hack at the same 14pt the
+# iTerm profiles use. The window opens straight into the herdr session "main".
+
+[general]
+live_config_reload = true
+
+[terminal]
+# OnlyCopy: remote and nested programs (tmux, vim, herdr over SSH) may set
+# the local clipboard. They may not read it; paste is Ctrl+Shift+V.
+osc52 = "OnlyCopy"
+shell = { program = "/bin/sh", args = ["-c", "exec \"$HOME/.local/bin/herdr-main\""] }
+
+[env]
+TERM = "xterm-256color"
+
+[window]
+padding = { x = 4, y = 2 }
+dynamic_padding = false
+opacity = 1.0
+startup_mode = "Windowed"
+decorations = "Full"
+
+[font]
+size = 14.0
+normal = { family = "Hack", style = "Regular" }
+bold = { family = "Hack", style = "Bold" }
+italic = { family = "Hack", style = "Italic" }
+bold_italic = { family = "Hack", style = "Bold Italic" }
+
+# monokai tasty, converted from the iTerm sRGB components.
+[colors.primary]
+background = "#262626"
+foreground = "#bcbcbc"
+
+[colors.cursor]
+text = "#262626"
+cursor = "#a4e400"
+
+[colors.vi_mode_cursor]
+text = "#262626"
+cursor = "#ff9700"
+
+[colors.selection]
+text = "#e7dc6d"
+background = "#5f5f5f"
+
+[colors.normal]
+black = "#262626"
+red = "#ff005f"
+green = "#a4e400"
+yellow = "#ff9700"
+blue = "#62d8f1"
+magenta = "#ff005f"
+cyan = "#5f5f5f"
+white = "#444444"
+
+[colors.bright]
+black = "#bcbcbc"
+red = "#ff9700"
+green = "#a4e400"
+yellow = "#ffff87"
+blue = "#62d8f1"
+magenta = "#ff005f"
+cyan = "#af87ff"
+white = "#ffffff"
+
+[selection]
+save_to_clipboard = true
