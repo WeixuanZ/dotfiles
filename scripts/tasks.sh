@@ -383,11 +383,23 @@ task_claude() {
     || claude plugin marketplace add jarrodwatts/claude-hud
   grep -q claude-hud@claude-hud <<<"$(claude plugin list)" \
     || claude plugin install claude-hud@claude-hud
-  local runtime root
-  runtime="$(command -v bun || command -v node)" || die "claude-hud needs Node.js. Run: mise run tools"
+  local node root shim="$HOME/.local/share/mise/shims/node"
+  node="$(command -v node)" || die "claude-hud needs Node.js 22.18+. Run: mise run tools"
   root="$(ls -td "$HOME"/.claude/plugins/cache/claude-hud/claude-hud/*/)"
-  "$runtime" "${root%%$'\n'*}scripts/setup.mjs" install --shell posix
-  ok "claude-hud is the Claude Code status line. Customize with /claude-hud:configure"
+  "$node" "${root%%$'\n'*}hud.mjs" install --shell posix >/dev/null
+  # `hud install` writes the absolute path of the node that ran it, which under
+  # mise changes with every Node release. Point the status line at the shim.
+  if [[ -x "$shim" ]]; then
+    "$node" -e '
+      const fs = require("fs"), [file, from, to] = process.argv.slice(1);
+      const path = fs.realpathSync(file), s = JSON.parse(fs.readFileSync(path, "utf8"));
+      const quoted = (p) => `'"'"'${p}'"'"'`;
+      if (s.statusLine?.command?.startsWith(quoted(from) + " ")) {
+        s.statusLine.command = quoted(to) + s.statusLine.command.slice(quoted(from).length);
+        fs.writeFileSync(path, JSON.stringify(s, null, 2) + "\n");
+      }' "$HOME/.claude/settings.json" "$("$node" -p process.execPath)" "$shim"
+  fi
+  ok "claude-hud is the Claude Code status line. Check or customize it with /hud"
 }
 
 usage() {

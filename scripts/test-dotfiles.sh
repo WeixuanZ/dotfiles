@@ -152,14 +152,14 @@ mkdir -p "$ch/bin" "$ch/home/.claude/plugins/cache/claude-hud/claude-hud/1.0.0/s
 # Fake claude: logs its arguments; `list` prints $ch/listed.
 printf '#!/bin/sh\necho "claude $*" >>"%s/log"\ncase "$*" in *list) cat "%s/listed" 2>/dev/null ;; esac\n' \
   "$ch" "$ch" >"$ch/bin/claude"
-printf '#!/bin/sh\necho "bun $*" >>"%s/log"\n' "$ch" >"$ch/bin/bun"
+printf '#!/bin/sh\necho "node $*" >>"%s/log"\n' "$ch" >"$ch/bin/node"
 chmod +x "$ch/bin"/*
 hud() {
   : >"$ch/log"
   HOME="$ch/home" PATH="$ch/bin:$PATH" bash "$ROOT/scripts/tasks.sh" claude >/dev/null
   sed "s|$ch/home/.claude/plugins/cache/claude-hud/claude-hud/1.0.0/|HUD/|" "$ch/log"
 }
-setup='bun HUD/scripts/setup.mjs install --shell posix'
+setup='node HUD/hud.mjs install --shell posix'
 expect "claude-hud installs" "claude plugin marketplace list
 claude plugin marketplace add jarrodwatts/claude-hud
 claude plugin list
