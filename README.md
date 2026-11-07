@@ -128,8 +128,8 @@ resumes agent panes that have an official integration.
 [claude-hud](https://github.com/jarrodwatts/claude-hud) plugin, then points
 the status line at it: model, git branch, context used, and plan usage
 limits under the prompt. It adds only `statusLine` to
-`~/.claude/settings.json`. `/claude-hud:configure` turns on the tools,
-agents, and todo lines.
+`~/.claude/settings.json`, pointed at mise's `node` shim so Node upgrades do
+not break it. `/hud` checks the setup and turns on more lines.
 
 ## pi
 
