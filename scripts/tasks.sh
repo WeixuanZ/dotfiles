@@ -38,9 +38,10 @@ task_link() {
       # misc/.tmux.conf, misc/.config/..., misc/.local/bin/..., misc/.pi/...
       [[ "$top" == .* ]] || continue
       dest="$HOME/$rel"
-    elif [[ "$file" == .* || "$file" == */.* ]]; then
-      # .gitconfig -> ~/.gitconfig, zsh/.zshrc -> ~/.zshrc
-      dest="$HOME/.${file#*.}"
+    elif [[ "${file##*/}" == .* ]]; then
+      # .gitconfig -> ~/.gitconfig, zsh/.zshrc -> ~/.zshrc. Only the file
+      # name counts, so repo metadata such as .github/workflows/ci.yml stays.
+      dest="$HOME/${file##*/}"
     else
       continue
     fi
@@ -319,8 +320,17 @@ task_ssh() {
   else
     sudo chmod 644 "$drop_dest" || true
     if [[ -f "$sshd_config" ]] && ! grep -qE '^[[:space:]]*Include[[:space:]]+/etc/ssh/sshd_config\.d/\*\.conf' "$sshd_config"; then
-      echo 'Include /etc/ssh/sshd_config.d/*.conf' | sudo tee -a "$sshd_config" >/dev/null \
-        || warn "could not add the sshd Include line"
+      # First line, not appended: sshd keeps the first value it reads, and an
+      # appended Include could land inside a trailing Match block.
+      local tmp
+      tmp="$(mktemp)"
+      if { echo 'Include /etc/ssh/sshd_config.d/*.conf'; sudo cat "$sshd_config"; } >"$tmp" \
+          && sudo cp "$tmp" "$sshd_config"; then
+        :
+      else
+        warn "could not add the sshd Include line"
+      fi
+      rm -f "$tmp"
     fi
     if is-macos; then
       if is-executable systemsetup; then

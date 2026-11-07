@@ -198,6 +198,8 @@ if command -v tmux >/dev/null 2>&1; then
     check "tmux $want" grep -qF "$want" <<<"$opts"
   done
   check "tmux copies via tmux-clipboard" grep -qF tmux-clipboard <<<"$(t list-keys -T copy-mode-vi)"
+  # list-keys doubles backslashes: this is send-keys 'C-\' (the key, not text).
+  check "tmux C-\\ passes the key to vim" grep -qF "send-keys 'C-\\\\')" <<<"$(t list-keys -T root)"
   t kill-server || true
 else
   printf 'skip tmux (not installed)\n'

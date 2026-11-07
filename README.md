@@ -23,7 +23,8 @@ mise run linux
 ```
 
 That links configs, installs zsh, tmux (resurrect + continuum), the Hack
-font, herdr, and the pi coding agent. iTerm2 and Hammerspoon stay macOS-only
+font, herdr, and the pi coding agent, and makes SSH public-key only (see
+below). iTerm2 and Hammerspoon stay macOS-only
 (`mise run iterm2`, `mise run hammerspoon`).
 
 ## What gets installed

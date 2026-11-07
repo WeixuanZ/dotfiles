@@ -45,13 +45,14 @@ copy_local() {
   return 1
 }
 
-# Write OSC 52 to stdout and, inside tmux, DCS-wrapped to every client tty
-# so tmux passes it through to the outer terminal.
+# Write OSC 52 to stdout and, inside tmux, to every client tty. A client tty
+# is the outer terminal itself, so the sequence goes there unwrapped (the
+# ESC P tmux; wrapper is only for output that tmux reads from a pane).
 osc52() {
   if [ -n "${TMUX:-}" ] && command -v tmux >/dev/null 2>&1; then
-    wrapped=$(printf '\033Ptmux;\033\033]52;c;%s\a\033\\' "$b64")
+    seq=$(printf '\033]52;c;%s\a' "$b64")
     tmux list-clients -F '#{client_tty}' 2>/dev/null | while IFS= read -r tty; do
-      if [ -w "$tty" ]; then printf '%s' "$wrapped" >"$tty"; fi
+      if [ -w "$tty" ]; then printf '%s' "$seq" >"$tty"; fi
     done
   fi
   printf '\033]52;c;%s\a' "$b64"
