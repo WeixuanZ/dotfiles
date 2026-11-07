@@ -108,7 +108,8 @@ tmux and herdr share the same prefix, `Ctrl-Space`, and the same vim keys:
 `prefix v` / `prefix H` to split, `h j k l` to move, `prefix c` for a new
 tab, `prefix R` to reload. Herdr's one deliberate difference: `prefix q`
 detaches (and `prefix d` does too). Herdr has no tmux-style pane-number
-overlay; `prefix g` is the goto chooser.
+overlay; `prefix g` is the goto chooser. In zsh, `t` attaches the tmux
+session `main` and `h` the herdr session `main` (both created if missing).
 
 Copy works the same locally and over SSH. tmux writes OSC 52, and also uses
 `pbcopy` (macOS), `wl-copy` (Wayland), or `xclip` (X11) when those are the
