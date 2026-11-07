@@ -1,0 +1,100 @@
+# Tasks for these dotfiles. `mise run` links configs into $HOME; `mise tasks`
+# lists the rest. What gets installed is declared in three files:
+#   misc/.config/mise/config.toml   dev toolchains and CLIs (macOS and Linux)
+#   install/Brewfile                Homebrew command-line packages
+#   install/Appfile                 macOS apps (casks and App Store)
+
+[tasks.link]
+description = "Link all tracked dotfiles into $HOME"
+alias = "default"
+run = "bash scripts/tasks.sh link"
+
+[tasks.tools]
+description = "Install the dev tools in ~/.config/mise/config.toml, and Tailscale"
+alias = ["python-packages", "node-packages"]
+depends = ["link"]
+run = "bash scripts/tasks.sh tools"
+
+[tasks.brew]
+description = "Install Homebrew (Linuxbrew on Linux)"
+run = "bash scripts/tasks.sh brew"
+
+[tasks.brew-packages]
+description = "Install Homebrew packages from install/Brewfile"
+run = "bash scripts/tasks.sh brew-packages"
+
+[tasks.apps]
+description = "Install macOS apps from install/Appfile"
+run = "bash scripts/tasks.sh apps"
+
+[tasks.brew-check]
+description = "Show how this machine differs from install/Brewfile and install/Appfile"
+alias = "update-brewfile"
+run = "bash scripts/tasks.sh brew-check"
+
+[tasks.init]
+description = "Install dev tools, Homebrew packages, and SSH"
+alias = ["install", "packages"]
+depends = ["tools", "brew-packages", "ssh"]
+run = "true"
+
+[tasks.editor]
+description = "Zed as the default editor for code files, and Quick Look previews (macOS)"
+run = "bash scripts/tasks.sh editor"
+
+[tasks.zsh]
+description = "Install oh-my-zsh, plugins, and link .zshrc"
+run = "bash scripts/tasks.sh zsh"
+
+[tasks.vim]
+description = "Install VimPlug and plugins, and link .vimrc"
+run = "bash scripts/tasks.sh vim"
+
+[tasks.vim-ycm]
+description = "Install YouCompleteMe for all languages"
+run = "bash scripts/tasks.sh vim-ycm"
+
+[tasks.iterm2]
+description = "Install and configure iTerm2 (macOS) and JetBrains Mono"
+run = "bash scripts/tasks.sh iterm2"
+
+[tasks.hammerspoon]
+description = "Install Hammerspoon and Spoons (macOS)"
+run = "bash scripts/tasks.sh hammerspoon"
+
+[tasks.haskell]
+description = "Install GHCup's recommended GHC, Cabal, Stack, and HLS"
+run = "bash scripts/tasks.sh haskell"
+
+[tasks.tmux]
+description = "Install TPM, resurrect, and continuum; restore on login"
+run = "bash scripts/tasks.sh tmux"
+
+[tasks.alacritty]
+description = "Install the Hack font and check the Alacritty config"
+run = "bash scripts/tasks.sh alacritty"
+
+[tasks.herdr]
+description = "Install herdr, the pi integration, and the user service"
+run = "bash scripts/tasks.sh herdr"
+
+[tasks.pi]
+description = "Install pi and the Claude, Gemini, Grok, subagent, and herdr packages"
+run = "bash scripts/tasks.sh pi"
+
+[tasks.claude]
+description = "Install Claude Code and the claude-hud status line"
+run = "bash scripts/tasks.sh claude"
+
+[tasks.ssh]
+description = "Public-key-only OpenSSH; Tailscale uses system ssh, not Tailscale SSH"
+run = "bash scripts/tasks.sh ssh"
+
+[tasks.linux]
+description = "Link configs and set up zsh, tmux, Alacritty, herdr, pi, and SSH"
+depends = ["link", "zsh", "tmux", "alacritty", "herdr", "pi", "ssh"]
+run = "true"
+
+[tasks.test]
+description = "Check configs, the linker, tmux, clipboard, and herdr"
+run = "bash scripts/test-dotfiles.sh"

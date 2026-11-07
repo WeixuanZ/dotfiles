@@ -1,0 +1,104 @@
+// vim/.vimrc key bindings, mapped to Zed actions. Leader is Space.
+[
+  {
+    "context": "vim_mode == insert",
+    "bindings": {
+      "j k": "vim::NormalBefore" // inoremap jk <ESC>
+    }
+  },
+  {
+    // Normal and visual mode
+    "context": "VimControl && !menu",
+    "bindings": {
+      // fzf.vim
+      "ctrl-p": "file_finder::Toggle", // :Files
+      "space R": "pane::DeploySearch", // :RG
+      "space f": "buffer_search::Deploy", // :BLines
+      "space b": "tab_switcher::Toggle", // :Buffer
+      "space H": "projects::OpenRecent", // :History
+
+      // YouCompleteMe
+      "space d": "editor::GoToDefinition", // :YcmCompleter GoTo
+      "space g r": "editor::FindAllReferences", // :YcmCompleter GoToReferences
+
+      // NERDTree
+      "space n": "pane::RevealInProjectPanel", // NERDTreeFind
+      "space N": "project_panel::ToggleFocus", // :NERDTreeFocus
+
+      // easymotion (closest built-in: 2-character sneak)
+      "space space": "vim::PushSneak",
+
+      // nerdcommenter
+      "space c space": "editor::ToggleComments",
+
+      // fugitive
+      "space g s": "git_panel::ToggleFocus", // :Git
+      "space g b": "git::Blame", // :Git blame
+      "space g d": "git::Diff", // :Git diff
+      "space g u": "git::RestoreFile", // :Gread
+      "space g w": "git::StageFile", // :Gwrite
+
+      // ALE
+      "ctrl-k": "editor::GoToPreviousDiagnostic",
+      "ctrl-j": "editor::GoToDiagnostic",
+      "space F": "diagnostics::Deploy", // quickfix toggle
+
+      // asyncrun / minimap
+      "space r": "task::Spawn",
+      "space m": "editor::ToggleMinimap",
+
+      // Misc
+      "space C C": "zed::OpenSettings", // :edit ~/.vimrc
+      "space w": "workspace::Save",
+      "space z": "editor::ToggleFold", // za
+      "space %": "workspace::CopyRelativePath",
+      "space y": ["workspace::SendKeystrokes", "\" + y"],
+      "space p": ["workspace::SendKeystrokes", "\" + p"],
+      "space '": ["workspace::SendKeystrokes", "\" +"],
+
+      // Tabs
+      "ctrl-left": "pane::ActivatePreviousItem",
+      "ctrl-right": "pane::ActivateNextItem",
+      "space 1": ["pane::ActivateItem", 0],
+      "space 2": ["pane::ActivateItem", 1],
+      "space 3": ["pane::ActivateItem", 2],
+      "space 4": ["pane::ActivateItem", 3],
+      "space 5": ["pane::ActivateItem", 4],
+      "space 6": ["pane::ActivateItem", 5],
+      "space 7": ["pane::ActivateItem", 6],
+      "space 8": ["pane::ActivateItem", 7],
+      "space 9": ["pane::ActivateItem", 8],
+
+      // Splits: <leader>{h,j,k,l}{h,j,k,l} jump, <leader>{h,j,k,l}n split
+      "space h h": "workspace::ActivatePaneLeft",
+      "space l l": "workspace::ActivatePaneRight",
+      "space k k": "workspace::ActivatePaneUp",
+      "space j j": "workspace::ActivatePaneDown",
+      "space h n": "pane::SplitLeft",
+      "space l n": "pane::SplitRight",
+      "space k n": "pane::SplitUp",
+      "space j n": "pane::SplitDown",
+      "space q": "pane::CloseActiveItem",
+
+      // Terminal
+      "space enter": "workspace::NewCenterTerminal"
+    }
+  },
+  {
+    "context": "vim_mode == normal && !menu",
+    "bindings": {
+      "shift-k": ["workspace::SendKeystrokes", "i enter escape"], // BreakHere(); hover is still on g h
+      "shift-q": ["workspace::SendKeystrokes", "@ q"], // nnoremap Q @q
+      "v shift-a": "editor::SelectAll", // vA ggVG
+      "space s": "buffer_search::DeployReplace" // :%s//g
+    }
+  },
+  {
+    "context": "vim_mode == visual && !menu",
+    "bindings": {
+      "shift-j": "editor::MoveLineDown", // vnoremap J :m '>+1<CR>gv=gv
+      "shift-k": "editor::MoveLineUp", // vnoremap K :m '<-2<CR>gv=gv
+      "space s": "buffer_search::DeployReplace"
+    }
+  }
+]

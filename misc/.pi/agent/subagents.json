@@ -1,0 +1,7 @@
+{
+  "backgroundByDefault": true,
+  "maxConcurrent": 8,
+  "maxConcurrentForeground": 0,
+  "worktreeIsolation": true,
+  "workflowsEnabled": true
+}

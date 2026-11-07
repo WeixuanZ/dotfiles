@@ -1,0 +1,8 @@
+# Personal worktrunk defaults. Project .config/wt.toml is merged on top.
+# pre-start blocks `wt switch -x` (and therefore `pi --wt-new`) until the
+# hook returns, so pi starts in a worktree that already has its deps.
+
+worktree-path = ".worktrees/{{ branch | sanitize }}"
+
+[[pre-start]]
+deps = "bash \"$HOME/.local/bin/wt-sync-deps\""

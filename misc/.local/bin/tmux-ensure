@@ -1,0 +1,20 @@
+#!/bin/sh
+# Start the tmux server if it is not already running, so tmux-continuum can
+# restore the last snapshot (taken every 5 minutes). Never attaches: Alacritty
+# attaches the herdr session named "main", not tmux.
+set -eu
+
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:$PATH"
+
+if ! command -v tmux >/dev/null 2>&1; then
+  echo "tmux-ensure: tmux is not installed" >&2
+  exit 1
+fi
+
+# ~/.tmux.conf sets exit-empty off, so the server keeps running with no
+# sessions until continuum restores one. Pass -f so this follows $HOME
+# (systemd and a login shell both set it) rather than the passwd home.
+if [ -f "$HOME/.tmux.conf" ]; then
+  exec tmux -f "$HOME/.tmux.conf" start-server
+fi
+exec tmux start-server

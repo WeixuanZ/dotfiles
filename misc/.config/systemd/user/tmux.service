@@ -1,0 +1,12 @@
+[Unit]
+Description=tmux server (continuum restores the last session)
+Documentation=file://%h/.tmux.conf
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=%h/.local/bin/tmux-ensure
+ExecStop=/bin/sh -c 'command -v tmux >/dev/null 2>&1 && tmux kill-server || true'
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,14 @@
+#!/bin/sh
+# Headless herdr server for the systemd user unit and the macOS LaunchAgent.
+# The server owns the panes, so they survive logout and come back after reboot
+# when this unit starts again (session.resume_agents_on_restore).
+set -eu
+
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:$PATH"
+
+if ! command -v herdr >/dev/null 2>&1; then
+  echo "herdr-server: herdr is not installed" >&2
+  exit 1
+fi
+
+exec herdr server

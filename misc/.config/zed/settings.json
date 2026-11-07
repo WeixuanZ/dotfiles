@@ -1,0 +1,34 @@
+// Zed, with vim/.vimrc's options where Zed has them. Only non-defaults.
+{
+  "base_keymap": "JetBrains",
+  "vim_mode": true,
+  "vim": {
+    "use_smartcase_find": true, // ignorecase smartcase
+    "use_system_clipboard": "never", // the clipboard is <leader>y / <leader>p
+    "toggle_relative_line_numbers": true // relativenumber, absolute in insert
+  },
+  "telemetry": { "diagnostics": false, "metrics": false },
+  "agent_servers": {
+    "cursor": { "type": "registry" },
+    "claude-acp": { "type": "registry" }
+  },
+
+  "theme": { "mode": "dark", "light": "One Light", "dark": "Ayu Dark" },
+  "show_whitespaces": "trailing", // listchars trail:·
+  "wrap_guides": [80, 120], // colorcolumn=80,120
+  "preferred_line_length": 79, // textwidth=79
+  "vertical_scroll_margin": 8, // scrolloff=8
+  "horizontal_scroll_margin": 10, // sidescrolloff=10
+  "format_on_save": "off",
+  "git": { "inline_blame": { "enabled": false } },
+
+  "languages": {
+    "JavaScript": { "tab_size": 2 },
+    "TypeScript": { "tab_size": 2 },
+    "CSS": { "tab_size": 2 },
+    "JSON": { "tab_size": 2 },
+    "JSONC": { "tab_size": 2 },
+    "YAML": { "tab_size": 2 },
+    "Markdown": { "soft_wrap": "editor_width" }
+  }
+}

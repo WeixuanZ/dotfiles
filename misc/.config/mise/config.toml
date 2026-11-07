@@ -1,0 +1,29 @@
+# Global dev tools. `mise install` (part of `mise run init`) installs them all.
+# Python CLIs use the pipx backend, which installs them with uv.
+
+[tools]
+node = "lts"
+python = "3.14"
+go = "1"
+java = "lts"
+uv = "latest"
+pnpm = "latest"
+yarn = "latest"
+
+gh = "latest"
+terraform = "latest"
+worktrunk = "latest"
+yt-dlp = "latest"
+"aqua:iffse/pay-respects" = "latest"
+"aqua:tailscale/tailscale" = "latest"
+eza = { version = "latest", os = ["linux"] } # Homebrew on macOS
+tmux = { version = "3.7c", os = ["linux"] } # Homebrew on macOS
+
+ruff = "latest"
+pre-commit = "latest"
+"pipx:ipython" = "latest"
+"pipx:neovim-remote" = "latest" # nvr; brings pynvim
+
+"npm:typescript" = "latest"
+"npm:prettier" = "latest"
+"npm:eslint" = "latest"

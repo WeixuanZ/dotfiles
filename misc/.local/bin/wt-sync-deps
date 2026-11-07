@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# worktrunk pre-start: copy gitignored caches, then install what is missing.
+# A failed copy must not skip the install (copy-ignored can die on huge trees).
+set -euo pipefail
+
+copy_ok=0
+if command -v wt >/dev/null 2>&1; then
+  if wt step copy-ignored; then
+    copy_ok=1
+  else
+    echo "wt-sync-deps: copy-ignored failed; installing from lockfiles" >&2
+  fi
+fi
+
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+python_ready=0
+if [[ "$copy_ok" -eq 1 && -x .venv/bin/python ]]; then
+  python_ready=1
+fi
+if [[ -f uv.lock || -f pyproject.toml ]] && [[ "$python_ready" -eq 0 ]]; then
+  command -v uv >/dev/null 2>&1 || {
+    echo "wt-sync-deps: uv is not on PATH (mise run init)" >&2
+    exit 1
+  }
+  if [[ -f uv.lock ]]; then
+    uv sync --frozen || uv sync
+  else
+    uv sync
+  fi
+fi
+
+node_ready=0
+if [[ "$copy_ok" -eq 1 && -d node_modules ]]; then
+  node_ready=1
+fi
+if [[ "$node_ready" -eq 1 ]]; then
+  exit 0
+fi
+
+if [[ -f pnpm-lock.yaml ]]; then
+  pnpm install --frozen-lockfile
+elif [[ -f package-lock.json ]]; then
+  npm ci
+elif [[ -f yarn.lock ]]; then
+  if [[ -f .yarnrc.yml ]]; then
+    yarn install --immutable
+  else
+    yarn install --frozen-lockfile
+  fi
+elif [[ -f package.json ]]; then
+  npm install
+fi
