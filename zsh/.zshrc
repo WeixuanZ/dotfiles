@@ -4,6 +4,7 @@
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 export PATH="$HOME/.local/bin:$PATH"
+typeset -U path  # keep PATH entries unique, whatever later lines add
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -270,6 +271,31 @@ unalias z 2> /dev/null
 function z {
     [ $# -gt 0 ] && _z "$*" && return
     cd "$(_z -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
+}
+
+# t: attach the tmux session "main", creating it if needed. Inside tmux,
+# switch to it instead of nesting.
+t() {
+  if [[ -n ${TMUX:-} ]]; then
+    tmux has-session -t main 2>/dev/null || tmux new-session -d -s main
+    tmux switch-client -t main
+  else
+    tmux new-session -A -s main
+  fi
+}
+
+# h: attach the herdr session "main", creating it if needed (what Alacritty
+# opens). Refuses to nest inside herdr.
+h() {
+  if [[ -n ${HERDR_ENV:-} ]]; then
+    print -u2 "already inside herdr"
+    return 1
+  fi
+  if ! command -v herdr >/dev/null 2>&1; then
+    print -u2 "herdr is not installed. Run: mise run herdr"
+    return 127
+  fi
+  "$HOME/.local/bin/herdr-main"
 }
 
 # herdr completions, when the binary is installed.
