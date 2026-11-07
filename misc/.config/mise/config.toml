@@ -7,7 +7,7 @@ python = "3.14"
 go = "1"
 java = "lts"
 uv = "latest"
-pnpm = "latest"
+"npm:pnpm" = "latest" # aqua has no Intel-Mac build of current pnpm
 yarn = "latest"
 
 gh = "latest"
@@ -15,7 +15,9 @@ terraform = "latest"
 worktrunk = "latest"
 yt-dlp = "latest"
 "aqua:iffse/pay-respects" = "latest"
-"aqua:tailscale/tailscale" = "latest"
+# On macOS aqua fetches the app installer, not a CLI; the Tailscale app
+# (cask, `mise run tools`) ships its own CLI that matches its daemon.
+"aqua:tailscale/tailscale" = { version = "latest", os = ["linux"] }
 eza = { version = "latest", os = ["linux"] } # Homebrew on macOS
 tmux = { version = "3.7c", os = ["linux"] } # Homebrew on macOS
 

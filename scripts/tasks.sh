@@ -319,7 +319,7 @@ task_ssh() {
     warn "could not install $drop_dest"
   else
     sudo chmod 644 "$drop_dest" || true
-    if [[ -f "$sshd_config" ]] && ! grep -qE '^[[:space:]]*Include[[:space:]]+/etc/ssh/sshd_config\.d/\*\.conf' "$sshd_config"; then
+    if [[ -f "$sshd_config" ]] && ! grep -qE '^[[:space:]]*Include[[:space:]]+/etc/ssh/sshd_config\.d/\*(\.conf)?[[:space:]]*$' "$sshd_config"; then
       # First line, not appended: sshd keeps the first value it reads, and an
       # appended Include could land inside a trailing Match block.
       local tmp
