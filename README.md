@@ -43,9 +43,9 @@ edits it in place. `mise run brew-check` lists what this machine has that the
 Homebrew lists do not, and the reverse. `mise run haskell` is a separate
 GHCup bootstrap for GHC, Cabal, Stack, and HLS.
 
-The Tailscale CLI from mise does not start the tunnel. On macOS, `tools`
-installs the Tailscale cask; on Linux, the distro `tailscaled`. Then
-`sudo tailscale up`. Open a new shell after `init` so `mise activate` in
+On macOS, `tools` installs the Tailscale app, which brings its own CLI. On
+Linux the CLI comes from mise and `tools` installs the distro `tailscaled`,
+which runs the tunnel. Then `sudo tailscale up`. Open a new shell after `init` so `mise activate` in
 `.zshrc` picks up the tools.
 
 Machine-specific settings stay out of the repo, in files the tracked configs
